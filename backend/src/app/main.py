@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse, Response
 from .cache import get_cached, set_cached
 from .config import ALLOWED_ORIGINS, CACHE_TTL_SECONDS
 from .polygon import polygon_client
+from .yfinance_client import yfinance_client
 
 # Create FastAPI app
 app = FastAPI(
@@ -247,4 +248,59 @@ async def get_ticker_financials(
         raise HTTPException(status_code=e.response.status_code, detail=error_detail)
 
     except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})
+
+
+@app.get("/api/ticker/{ticker}/history")
+async def get_ticker_history(
+    ticker: str,
+    period: Optional[str] = Query(
+        "7d",
+        description="Time period for historical data",
+        regex=r"^(7d|3mo|6mo|1y)$",
+    ),
+):
+    """
+    Get historical stock price data using yfinance with caching.
+
+    Args:
+        ticker: Stock ticker symbol (e.g., AAPL, MSFT)
+        period: Time period - "7d", "3mo", "6mo", or "1y" (default: "7d")
+
+    Returns:
+        Historical price data with dates and closing prices
+    """
+    # Create cache key for historical data
+    cache_key = f"history_{ticker.upper()}_{period}"
+    
+    # Check cache first
+    cached_data = get_cached(cache_key)
+    if cached_data is not None:
+        response = JSONResponse(content=cached_data)
+        response.headers["X-Cache"] = "HIT"
+        # Cache historical data for 1 hour
+        cache_ttl = 3600
+        response.headers["Cache-Control"] = f"public, max-age={cache_ttl}"
+        return response
+
+    try:
+        # Fetch from yfinance
+        data = yfinance_client.get_historical_data(ticker, period)
+
+        # Cache the successful response for 1 hour
+        set_cached(cache_key, data)
+
+        # Return with cache headers
+        response = JSONResponse(content=data)
+        response.headers["X-Cache"] = "MISS"
+        cache_ttl = 3600  # 1 hour for historical data
+        response.headers["Cache-Control"] = f"public, max-age={cache_ttl}"
+        return response
+
+    except HTTPException:
+        # Re-raise HTTP exceptions from yfinance_client
+        raise
+
+    except Exception as e:
+        # Handle unexpected errors
         raise HTTPException(status_code=500, detail={"error": str(e)})

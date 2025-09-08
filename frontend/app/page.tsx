@@ -6,6 +6,7 @@ import { TickerForm } from "@/components/ticker-form";
 import { TickerOverview } from "@/components/ticker-overview";
 import { MarketSnapshot } from "@/components/market-snapshot";
 import { Financials } from "@/components/financials";
+import { StockChart } from "@/components/stock-chart";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -58,7 +59,7 @@ export default function Home() {
 				fetch(`/api/ticker/${ticker}/snapshot`),
 				fetch(`/api/ticker/${ticker}/financials?timeframe=annual&limit=3`)
 			]);
-			
+
 			if (!overviewResponse.ok) {
 				const errorData = await overviewResponse.json();
 				throw new Error(errorData.detail?.message || errorData.detail || `Error: ${overviewResponse.status}`);
@@ -134,7 +135,12 @@ export default function Home() {
 						</TabsList>
 						<TabsContent value="overview">
 							{loading && <LoadingSkeleton />}
-							{data && !loading && <TickerOverview data={data} />}
+							{data && !loading && (
+								<div className="space-y-6">
+									<TickerOverview data={data} />
+									<StockChart ticker={currentTicker} />
+								</div>
+							)}
 						</TabsContent>
 						<TabsContent value="financials">
 							{financialsLoading && <FinancialsSkeleton />}
