@@ -184,3 +184,67 @@ async def get_ticker_snapshot(ticker: str):
     except Exception as e:
         # Handle other errors
         raise HTTPException(status_code=500, detail={"error": str(e)})
+
+
+@app.get("/api/ticker/{ticker}/financials")
+async def get_ticker_financials(
+    ticker: str,
+    timeframe: Optional[str] = Query(
+        None,
+        description="annual | quarterly | ttm",
+        regex=r"^(annual|quarterly|ttm)$",
+    ),
+    limit: int = Query(8, ge=1, le=100),
+    include_sources: bool = Query(False),
+    sort: Optional[str] = Query(None, description="Sort field for ordering"),
+    order: Optional[str] = Query(None, description="asc | desc", regex=r"^(asc|desc)$"),
+    filing_date: Optional[str] = Query(None, description="Filter by filing_date"),
+    period_of_report_date: Optional[str] = Query(None, description="Filter by period_of_report_date"),
+):
+    """
+    Get financial statements for a ticker from Polygon.io with caching.
+
+    Uses the experimental /vX/reference/financials endpoint.
+    """
+    cache_key = f"financials_{ticker}_{timeframe}_{limit}_{include_sources}_{sort}_{order}_{filing_date}_{period_of_report_date}"
+
+    cached_data = get_cached(cache_key)
+    if cached_data is not None:
+        response = JSONResponse(content=cached_data)
+        response.headers["X-Cache"] = "HIT"
+        response.headers["Cache-Control"] = f"public, max-age={CACHE_TTL_SECONDS}"
+        return response
+
+    try:
+        data = await polygon_client.get_financials(
+            ticker=ticker,
+            timeframe=timeframe,
+            limit=limit,
+            include_sources=include_sources,
+            sort=sort,
+            order=order,
+            filing_date=filing_date,
+            period_of_report_date=period_of_report_date,
+        )
+
+        set_cached(cache_key, data)
+
+        response = JSONResponse(content=data)
+        response.headers["X-Cache"] = "MISS"
+        response.headers["Cache-Control"] = f"public, max-age={CACHE_TTL_SECONDS}"
+        return response
+
+    except httpx.HTTPStatusError as e:
+        error_detail = {
+            "error": "Polygon API error",
+            "status_code": e.response.status_code,
+        }
+        try:
+            error_detail["detail"] = e.response.json()
+        except:
+            error_detail["detail"] = e.response.text
+
+        raise HTTPException(status_code=e.response.status_code, detail=error_detail)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})

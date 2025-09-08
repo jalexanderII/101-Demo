@@ -5,8 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { TickerForm } from "@/components/ticker-form";
 import { TickerOverview } from "@/components/ticker-overview";
 import { MarketSnapshot } from "@/components/market-snapshot";
+import { Financials } from "@/components/financials";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle } from "lucide-react";
 
 export default function Home() {
@@ -15,9 +17,11 @@ export default function Home() {
 
 	const [loading, setLoading] = useState(false);
 	const [snapshotLoading, setSnapshotLoading] = useState(false);
+	const [financialsLoading, setFinancialsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [data, setData] = useState<any>(null);
 	const [snapshotData, setSnapshotData] = useState<any>(null);
+	const [financialsData, setFinancialsData] = useState<any>(null);
 	const [currentTicker, setCurrentTicker] = useState<string>("");
 	const [currentDate, setCurrentDate] = useState<string | undefined>(undefined);
 
@@ -35,9 +39,11 @@ export default function Home() {
 	async function fetchTickerData(ticker: string, date?: string) {
 		setLoading(true);
 		setSnapshotLoading(true);
+		setFinancialsLoading(true);
 		setError(null);
 		setData(null);
 		setSnapshotData(null);
+		setFinancialsData(null);
 		setCurrentTicker(ticker);
 		setCurrentDate(date);
 
@@ -47,9 +53,10 @@ export default function Home() {
 		router.replace(url.pathname + "?" + url.searchParams.toString());
 
 		try {
-			const [overviewResponse, snapshotResponse] = await Promise.all([
+			const [overviewResponse, snapshotResponse, financialsResponse] = await Promise.all([
 				fetch(`/api/ticker/${ticker}${date ? `?date=${date}` : ""}`),
-				fetch(`/api/ticker/${ticker}/snapshot`)
+				fetch(`/api/ticker/${ticker}/snapshot`),
+				fetch(`/api/ticker/${ticker}/financials?timeframe=annual&limit=3`)
 			]);
 			
 			if (!overviewResponse.ok) {
@@ -66,10 +73,17 @@ export default function Home() {
 				setSnapshotData(snapshotResult);
 			}
 			setSnapshotLoading(false);
+
+			if (financialsResponse.ok) {
+				const financialsResult = await financialsResponse.json();
+				setFinancialsData(financialsResult);
+			}
+			setFinancialsLoading(false);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "An unexpected error occurred");
 			setLoading(false);
 			setSnapshotLoading(false);
+			setFinancialsLoading(false);
 		}
 	}
 
@@ -111,9 +125,28 @@ export default function Home() {
 					</Alert>
 				)}
 
-				{/* Main Content - Company Overview */}
-				{loading && <LoadingSkeleton />}
-				{data && !loading && <TickerOverview data={data} />}
+				{/* Main Content - Tabbed View */}
+				{(loading || data) && (
+					<Tabs defaultValue="overview" className="w-full">
+						<TabsList className="grid w-full grid-cols-2">
+							<TabsTrigger value="overview">Overview</TabsTrigger>
+							<TabsTrigger value="financials">Financials</TabsTrigger>
+						</TabsList>
+						<TabsContent value="overview">
+							{loading && <LoadingSkeleton />}
+							{data && !loading && <TickerOverview data={data} />}
+						</TabsContent>
+						<TabsContent value="financials">
+							{financialsLoading && <FinancialsSkeleton />}
+							{financialsData && !financialsLoading && <Financials results={financialsData.results || []} />}
+							{!financialsData && !financialsLoading && !loading && (
+								<div className="text-center py-8 text-muted-foreground">
+									No financial data available
+								</div>
+							)}
+						</TabsContent>
+					</Tabs>
+				)}
 			</div>
 		</main>
 	);
@@ -141,6 +174,29 @@ function SnapshotSkeleton() {
 					<div key={i}>
 						<Skeleton className="h-4 w-20 mb-2" />
 						<Skeleton className="h-8 w-full" />
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
+function FinancialsSkeleton() {
+	return (
+		<div className="space-y-4">
+			<Skeleton className="h-10 w-full" />
+			<div className="grid gap-4 md:grid-cols-2">
+				{[...Array(8)].map((_, i) => (
+					<div key={i} className="bg-card rounded-lg border p-4">
+						<Skeleton className="h-4 w-32 mb-3" />
+						<div className="space-y-2">
+							{[...Array(5)].map((_, j) => (
+								<div key={j} className="flex justify-between">
+									<Skeleton className="h-3 w-24" />
+									<Skeleton className="h-3 w-16" />
+								</div>
+							))}
+						</div>
 					</div>
 				))}
 			</div>

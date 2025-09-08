@@ -78,6 +78,64 @@ class PolygonClient:
 
         return response.json()
 
+    async def get_financials(
+        self,
+        ticker: str,
+        timeframe: Optional[str] = None,
+        limit: int = 8,
+        include_sources: bool = False,
+        sort: Optional[str] = None,
+        order: Optional[str] = None,
+        filing_date: Optional[str] = None,
+        period_of_report_date: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get financials from Polygon API (experimental endpoint).
+
+        Docs: /vX/reference/financials
+
+        Args:
+            ticker: Stock ticker symbol
+            timeframe: "annual", "quarterly", or "ttm"
+            limit: Number of results to return (max 100)
+            include_sources: Whether to include xpath/formula sources
+            sort: Sort field used for ordering
+            order: asc or desc
+            filing_date: Filter by filing_date
+            period_of_report_date: Filter by period_of_report_date
+
+        Returns:
+            Polygon API response as dict
+
+        Raises:
+            httpx.HTTPStatusError: If API returns non-200 status
+        """
+        if not self.client:
+            raise RuntimeError("Client not initialized. Call start() first.")
+
+        url = "/vX/reference/financials"
+        params: Dict[str, Any] = {
+            "ticker": ticker.upper(),
+            "limit": limit,
+        }
+        if timeframe:
+            params["timeframe"] = timeframe
+        if include_sources:
+            params["include_sources"] = "true"
+        if sort:
+            params["sort"] = sort
+        if order:
+            params["order"] = order
+        if filing_date:
+            params["filing_date"] = filing_date
+        if period_of_report_date:
+            params["period_of_report_date"] = period_of_report_date
+
+        response = await self.client.get(url, params=params)
+        response.raise_for_status()
+
+        return response.json()
+
 
 # Global client instance
 polygon_client = PolygonClient()

@@ -87,7 +87,7 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 		<div className="space-y-4">
 			{/* Company Header - Compact */}
 			<Card>
-				<CardContent className="pt-6">
+				<CardContent className="pt-3">
 					<div className="flex items-start gap-4">
 						{results.branding?.logo_url && (
 							<Avatar className="h-12 w-12">
@@ -146,7 +146,7 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 				{/* Market Info */}
 				<Card>
-					<CardHeader className="pb-3">
+					<CardHeader className="pb-0">
 						<CardTitle className="text-sm font-medium">Market Data</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3">
@@ -161,7 +161,7 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 
 				{/* Company Info */}
 				<Card>
-					<CardHeader className="pb-3">
+					<CardHeader className="pb-0">
 						<CardTitle className="text-sm font-medium">Company Info</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3">
@@ -182,7 +182,7 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 
 				{/* Details */}
 				<Card>
-					<CardHeader className="pb-3">
+					<CardHeader className="pb-0">
 						<CardTitle className="text-sm font-medium">Details</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3">
@@ -198,7 +198,7 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 				{/* Share Information */}
 				{(results.share_class_shares_outstanding || results.composite_figi) && (
 					<Card className="md:col-span-2 lg:col-span-3">
-						<CardHeader className="pb-3">
+						<CardHeader className="pb-0">
 							<CardTitle className="text-sm font-medium">Share Information</CardTitle>
 						</CardHeader>
 						<CardContent>
