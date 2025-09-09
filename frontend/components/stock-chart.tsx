@@ -34,7 +34,10 @@ interface StockChartProps {
     ticker: string;
 }
 
+
 // Period type now imported from store
+type Period = "7d" | "3mo" | "6mo" | "1y";
+
 
 const PERIOD_LABELS: Record<Period, string> = {
     "7d": "7 Days",

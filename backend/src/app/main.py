@@ -323,7 +323,6 @@ async def get_ticker_price_summary(
     except Exception as e:
         raise HTTPException(status_code=500, detail={"error": str(e)})
 
-
 @app.get("/api/ticker/{ticker}/history")
 async def get_ticker_history(
     ticker: str,
