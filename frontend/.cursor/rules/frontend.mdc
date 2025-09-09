@@ -1,0 +1,17 @@
+---
+description: Rules for Frontend Code Development
+globs: .tsx,.ts,.js,.jsx
+alwaysApply: false
+---
+
+Package Manager
+- Pnpm 
+- instead of `npx` -> `pnpm dlx`
+
+UI 
+- Shadcn UI (Charts, Table, DataTable, all UI components)
+- Lucite icons
+- Framer Motion
+
+State
+- Zustand
