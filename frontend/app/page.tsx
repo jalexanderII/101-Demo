@@ -98,11 +98,13 @@ export default function Home() {
 				{/* Header and Search Bar */}
 				<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
 					<div>
-						<h1 className="text-3xl font-bold tracking-tight">Finance Dashboard</h1>
+						<h1 className="text-3xl font-bold tracking-tight">
+							Finance Dashboard
+						</h1>
 						<p className="text-muted-foreground">Real-time stock data powered by Polygon.io</p>
 					</div>
 					{/* Search Form - Top Right */}
-					<div className="bg-card/50 rounded-lg border p-3 sm:min-w-[280px]">
+					<div className="bg-card/50 rounded-lg border border-primary/10 p-3 sm:min-w-[280px] shadow-sm">
 						<TickerForm onSubmit={fetchTickerData} isLoading={loading} />
 					</div>
 				</div>

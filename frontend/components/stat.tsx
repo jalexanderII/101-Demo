@@ -9,17 +9,19 @@ export function Stat({
 	icon: Icon,
 	help,
 	className,
+	iconColor,
 }: {
 	label: string;
 	value: React.ReactNode;
 	icon?: React.ElementType;
 	help?: string;
 	className?: string;
+	iconColor?: string;
 }) {
 	const content = (
-		<div className={"space-y-1 " + (className ?? "") }>
+		<div className={"space-y-1 " + (className ?? "")}>
 			<p className="text-xs text-muted-foreground flex items-center gap-1">
-				{Icon ? <Icon className="h-3 w-3" /> : null}
+				{Icon ? <Icon className={`h-3 w-3 ${iconColor || 'text-muted-foreground'}`} /> : null}
 				{label}
 			</p>
 			<div className="text-xl font-semibold leading-none">{value}</div>

@@ -79,8 +79,8 @@ export function ProminentPriceDisplay() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.5 }}
-                    className={`flex items-center justify-center gap-2 text-xl font-semibold mt-2 ${isFlatTrend ? 'text-muted-foreground' :
-                        isPositiveTrend ? 'text-green-600' : 'text-red-600'
+                    className={`flex items-center justify-center gap-2 text-xl font-semibold mt-2 ${isFlatTrend ? 'text-neutral' :
+                        isPositiveTrend ? 'text-gain' : 'text-loss'
                         }`}
                 >
                     <motion.div
