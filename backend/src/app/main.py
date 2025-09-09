@@ -251,6 +251,79 @@ async def get_ticker_financials(
         raise HTTPException(status_code=500, detail={"error": str(e)})
 
 
+@app.get("/api/ticker/{ticker}/price-summary")
+async def get_ticker_price_summary(
+    ticker: str,
+    period: Optional[str] = Query(
+        "7d",
+        description="Time period for price summary",
+        regex=r"^(7d|3mo|6mo|1y)$",
+    ),
+):
+    """
+    Get price summary for the prominent display - current price, change, and percentage.
+    This syncs with the chart time period selection.
+
+    Args:
+        ticker: Stock ticker symbol (e.g., AAPL, MSFT)
+        period: Time period - "7d", "3mo", "6mo", or "1y" (default: "7d")
+
+    Returns:
+        Price summary with current price, change from start of period, and percentage change
+    """
+    # Create cache key for price summary
+    cache_key = f"price_summary_{ticker.upper()}_{period}"
+    
+    # Check cache first (shorter TTL for price data)
+    cached_data = get_cached(cache_key)
+    if cached_data is not None:
+        response = JSONResponse(content=cached_data)
+        response.headers["X-Cache"] = "HIT"
+        cache_ttl = 300  # 5 minutes for price data
+        response.headers["Cache-Control"] = f"public, max-age={cache_ttl}"
+        return response
+
+    try:
+        # Get historical data to calculate change from start of period
+        historical_data = yfinance_client.get_historical_data(ticker, period)
+        
+        if not historical_data["data"]:
+            raise HTTPException(status_code=404, detail="No price data available")
+        
+        # Get first and last prices from the period
+        price_data = historical_data["data"]
+        start_price = price_data[0]["close"]
+        current_price = price_data[-1]["close"]
+        
+        # Calculate change and percentage
+        price_change = current_price - start_price
+        percent_change = (price_change / start_price) * 100 if start_price != 0 else 0
+        
+        result = {
+            "ticker": ticker.upper(),
+            "period": period,
+            "current_price": current_price,
+            "start_price": start_price,
+            "price_change": price_change,
+            "percent_change": percent_change,
+            "data_points": len(price_data)
+        }
+
+        # Cache the response
+        set_cached(cache_key, result)
+
+        response = JSONResponse(content=result)
+        response.headers["X-Cache"] = "MISS"
+        response.headers["Cache-Control"] = f"public, max-age=300"
+        return response
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})
+
+
 @app.get("/api/ticker/{ticker}/history")
 async def get_ticker_history(
     ticker: str,

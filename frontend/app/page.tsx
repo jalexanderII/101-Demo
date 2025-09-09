@@ -7,9 +7,12 @@ import { TickerOverview } from "@/components/ticker-overview";
 import { MarketSnapshot } from "@/components/market-snapshot";
 import { Financials } from "@/components/financials";
 import { StockChart } from "@/components/stock-chart";
+import { StaggerContainer, StaggerItem } from "@/components/ui/stagger-container";
+import { motion, AnimatePresence } from "motion/react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tab } from "@/components/ui/pricing-tab";
 import { AlertCircle } from "lucide-react";
 
 export default function Home() {
@@ -25,6 +28,7 @@ export default function Home() {
 	const [financialsData, setFinancialsData] = useState<any>(null);
 	const [currentTicker, setCurrentTicker] = useState<string>("");
 	const [currentDate, setCurrentDate] = useState<string | undefined>(undefined);
+	const [activeTab, setActiveTab] = useState<string>("Overview");
 
 	useEffect(() => {
 		const t = params.get("ticker") ?? "";
@@ -128,30 +132,78 @@ export default function Home() {
 
 				{/* Main Content - Tabbed View */}
 				{(loading || data) && (
-					<Tabs defaultValue="overview" className="w-full">
-						<TabsList className="grid w-full grid-cols-2">
-							<TabsTrigger value="overview">Overview</TabsTrigger>
-							<TabsTrigger value="financials">Financials</TabsTrigger>
-						</TabsList>
-						<TabsContent value="overview">
-							{loading && <LoadingSkeleton />}
-							{data && !loading && (
-								<div className="space-y-6">
-									<TickerOverview data={data} />
-									<StockChart ticker={currentTicker} />
-								</div>
-							)}
-						</TabsContent>
-						<TabsContent value="financials">
-							{financialsLoading && <FinancialsSkeleton />}
-							{financialsData && !financialsLoading && <Financials results={financialsData.results || []} />}
-							{!financialsData && !financialsLoading && !loading && (
-								<div className="text-center py-8 text-muted-foreground">
-									No financial data available
-								</div>
-							)}
-						</TabsContent>
-					</Tabs>
+					<div className="w-full">
+						{/* Base Tabs */}
+						<div className="flex justify-center mb-6">
+							<div className="flex rounded-lg border p-1 bg-muted/50 w-full">
+								<Tab
+									text="Overview"
+									selected={activeTab === "Overview"}
+									setSelected={setActiveTab}
+								/>
+								<Tab
+									text="Financials"
+									selected={activeTab === "Financials"}
+									setSelected={setActiveTab}
+								/>
+							</div>
+						</div>
+
+						{/* Tab Content */}
+						{activeTab === "Overview" && (
+							<>
+								{loading && <LoadingSkeleton />}
+								{data && !loading && (
+									<AnimatePresence mode="wait">
+										<motion.div
+											key="overview-content"
+											initial={{ opacity: 0, y: 20 }}
+											animate={{ opacity: 1, y: 0 }}
+											exit={{ opacity: 0, y: -20 }}
+											transition={{ duration: 0.4, ease: "easeInOut" }}
+											className="space-y-6"
+										>
+											<StaggerItem>
+												<TickerOverview data={data} />
+											</StaggerItem>
+											<StaggerItem delay={0.2}>
+												<StockChart ticker={currentTicker} />
+											</StaggerItem>
+										</motion.div>
+									</AnimatePresence>
+								)}
+							</>
+						)}
+
+						{activeTab === "Financials" && (
+							<>
+								{financialsLoading && <FinancialsSkeleton />}
+								{financialsData && !financialsLoading && (
+									<AnimatePresence mode="wait">
+										<motion.div
+											key="financials-content"
+											initial={{ opacity: 0, y: 20 }}
+											animate={{ opacity: 1, y: 0 }}
+											exit={{ opacity: 0, y: -20 }}
+											transition={{ duration: 0.4, ease: "easeInOut" }}
+										>
+											<Financials results={financialsData.results || []} />
+										</motion.div>
+									</AnimatePresence>
+								)}
+								{!financialsData && !financialsLoading && !loading && (
+									<motion.div
+										initial={{ opacity: 0, y: 20 }}
+										animate={{ opacity: 1, y: 0 }}
+										transition={{ duration: 0.4, ease: "easeInOut" }}
+										className="text-center py-8 text-muted-foreground"
+									>
+										No financial data available
+									</motion.div>
+								)}
+							</>
+						)}
+					</div>
 				)}
 			</div>
 		</main>

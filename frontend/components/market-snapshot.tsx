@@ -7,6 +7,9 @@ import { Stat } from "@/components/stat";
 import { formatCompactCurrencyTBM, formatCurrency, formatNumber } from "@/lib/format";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState } from "react";
+import { StaggerContainer, StaggerItem } from "@/components/ui/stagger-container";
+import { AnimatedCounter, formatters } from "@/components/ui/animated-counter";
+// Removed store imports and ticker components since we're using dedicated endpoint now
 
 interface SnapshotData {
 	status: string;
@@ -52,6 +55,8 @@ export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps)
 	const TrendIcon = isPositive ? TrendingUp : TrendingDown;
 	const changeColor = isPositive ? "text-green-600" : "text-red-600";
 
+	// Price data now handled by dedicated endpoint and global store
+
 	async function handleRefresh() {
 		if (!onRefresh) return;
 		setLoading(true);
@@ -63,11 +68,12 @@ export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps)
 		<Card className="overflow-hidden">
 			<CardContent className="p-4">
 				<div className="flex items-start justify-between gap-2 mb-3">
-					<div className="flex items-center gap-2">
+					<div className="flex items-center gap-3">
 						<Badge variant="outline" className="text-xs">{ticker}</Badge>
 						<span className="text-xs text-muted-foreground flex items-center gap-1">
 							<Clock className="h-3 w-3" /> Last update {formatTime(snapshot.lastTrade?.t || snapshot.updated)}
 						</span>
+						{/* Removed ticker display - simplified for cleaner layout */}
 					</div>
 					{onRefresh && (
 						<TooltipProvider>
@@ -89,51 +95,96 @@ export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps)
 					)}
 				</div>
 
-				<div className="grid gap-4 md:grid-cols-4">
-					<Stat
-						label="Last Price"
-						value={formatCurrency(snapshot.lastTrade?.p || snapshot.day?.c, { maximumFractionDigits: 2 })}
-					/>
-					<Stat
-						label="Change"
-						value={
-							<div className={`inline-flex items-center gap-1 ${changeColor}`}>
-								<TrendIcon className="h-4 w-4" />
-								<span>{formatCurrency(Math.abs(snapshot.todaysChange), { maximumFractionDigits: 2 })}</span>
-								<span className="text-sm">({isPositive ? "+" : ""}{snapshot.todaysChangePerc.toFixed(2)}%)</span>
-							</div>
-						}
-					/>
-					{snapshot.day && (
+				<StaggerContainer className="grid gap-4 md:grid-cols-4">
+					<StaggerItem>
 						<Stat
-							label="Volume"
-							value={formatNumber(snapshot.day.v)}
-							help={`VWAP ${formatCurrency(snapshot.day.vw, { maximumFractionDigits: 4 })}`}
-						/>
-					)}
-					{snapshot.day && (
-						<Stat
-							label="Day Range"
+							label="Last Price"
 							value={
-								<div className="w-full">
-									<div className="relative h-2 w-full rounded-full bg-muted">
-										<div
-											className="absolute h-full rounded-full bg-primary"
-											style={{
-												left: `${((snapshot.day.o - snapshot.day.l) / (snapshot.day.h - snapshot.day.l)) * 100}%`,
-												width: `${((snapshot.day.c - snapshot.day.o) / (snapshot.day.h - snapshot.day.l)) * 100}%`,
-											}}
+								<AnimatedCounter
+									value={snapshot.lastTrade?.p || snapshot.day?.c || 0}
+									formatter={formatters.price}
+									duration={1.4}
+									delay={0.2}
+								/>
+							}
+						/>
+					</StaggerItem>
+					<StaggerItem>
+						<Stat
+							label="Change"
+							value={
+								<div className={`inline-flex items-center gap-1 ${changeColor}`}>
+									<TrendIcon className="h-4 w-4" />
+									<span>
+										<AnimatedCounter
+											value={Math.abs(snapshot.todaysChange)}
+											formatter={formatters.price}
+											duration={1.4}
+											delay={0.3}
 										/>
-									</div>
-									<div className="mt-1 flex justify-between text-xs text-muted-foreground">
-										<span>{formatCurrency(snapshot.day.l, { maximumFractionDigits: 2 })}</span>
-										<span>{formatCurrency(snapshot.day.h, { maximumFractionDigits: 2 })}</span>
-									</div>
+									</span>
+									<span className="text-sm">
+										({isPositive ? "+" : ""}{snapshot.todaysChangePerc.toFixed(2)}%)
+									</span>
 								</div>
 							}
 						/>
+					</StaggerItem>
+					{snapshot.day && (
+						<StaggerItem>
+							<Stat
+								label="Volume"
+								value={
+									<AnimatedCounter
+										value={snapshot.day.v}
+										formatter={formatters.compact}
+										duration={1.6}
+										delay={0.4}
+									/>
+								}
+								help={`VWAP ${formatCurrency(snapshot.day.vw, { maximumFractionDigits: 4 })}`}
+							/>
+						</StaggerItem>
 					)}
-				</div>
+					{snapshot.day && (
+						<StaggerItem>
+							<Stat
+								label="Day Range"
+								value={
+									<div className="w-full">
+										<div className="relative h-2 w-full rounded-full bg-muted">
+											<div
+												className="absolute h-full rounded-full bg-primary"
+												style={{
+													left: `${((snapshot.day.o - snapshot.day.l) / (snapshot.day.h - snapshot.day.l)) * 100}%`,
+													width: `${((snapshot.day.c - snapshot.day.o) / (snapshot.day.h - snapshot.day.l)) * 100}%`,
+												}}
+											/>
+										</div>
+										<div className="mt-1 flex justify-between text-xs text-muted-foreground">
+											<span>
+												<AnimatedCounter
+													value={snapshot.day.l}
+													formatter={formatters.price}
+													duration={1.4}
+													delay={0.5}
+												/>
+											</span>
+											<span>
+												<AnimatedCounter
+													value={snapshot.day.h}
+													formatter={formatters.price}
+													duration={1.4}
+													delay={0.6}
+												/>
+											</span>
+										</div>
+									</div>
+								}
+							/>
+						</StaggerItem>
+					)}
+				</StaggerContainer>
 			</CardContent>
 		</Card>
 	);

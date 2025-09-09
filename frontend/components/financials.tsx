@@ -1,7 +1,13 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	Tabs,
+	TabsList,
+	TabsTrigger,
+	TabsContent,
+	TabsContents
+} from "@/components/ui/shadcn-io/tabs";
 import { formatFinancialValue } from "@/lib/format";
 
 interface FinancialPoint {
@@ -934,93 +940,103 @@ export function Financials({ results }: { results: FinancialsResult[] }) {
 				<TabsTrigger value="comp">Comprehensive</TabsTrigger>
 			</TabsList>
 
-			<TabsContent value="income" className="mt-6">
-				<Tabs defaultValue={results[0]?.fiscal_year || "2024"} className="w-full">
-					<TabsList className="grid w-full grid-cols-3">
-						{results.map((period, idx) => (
-							<TabsTrigger key={idx} value={period.fiscal_year || `year-${idx}`}>
-								{period.fiscal_year || ""} {period.fiscal_period || ""}
-							</TabsTrigger>
-						))}
-					</TabsList>
-					{results.map((period, idx) => (
-						<TabsContent key={idx} value={period.fiscal_year || `year-${idx}`} className="mt-4">
-							<div className="text-xs text-muted-foreground mb-4">
-								{period.timeframe ? `${period.timeframe.toUpperCase()}` : ""}
-								{period.end_date ? ` • End ${new Date(period.end_date).toLocaleDateString()}` : ""}
-								{period.filing_date ? ` • Filed ${new Date(period.filing_date).toLocaleDateString()}` : ""}
-							</div>
-							{renderIncomeStatement(period.financials?.income_statement)}
-						</TabsContent>
-					))}
-				</Tabs>
-			</TabsContent>
+			<TabsContents className="mt-6">
+				<TabsContent value="income">
+					<Tabs defaultValue={results[0]?.fiscal_year || "2024"} className="w-full">
+						<TabsList className="grid w-full grid-cols-3">
+							{results.map((period, idx) => (
+								<TabsTrigger key={idx} value={period.fiscal_year || `year-${idx}`}>
+									{period.fiscal_year || ""} {period.fiscal_period || ""}
+								</TabsTrigger>
+							))}
+						</TabsList>
+						<TabsContents className="mt-4">
+							{results.map((period, idx) => (
+								<TabsContent key={idx} value={period.fiscal_year || `year-${idx}`}>
+									<div className="text-xs text-muted-foreground mb-4">
+										{period.timeframe ? `${period.timeframe.toUpperCase()}` : ""}
+										{period.end_date ? ` • End ${new Date(period.end_date).toLocaleDateString()}` : ""}
+										{period.filing_date ? ` • Filed ${new Date(period.filing_date).toLocaleDateString()}` : ""}
+									</div>
+									{renderIncomeStatement(period.financials?.income_statement)}
+								</TabsContent>
+							))}
+						</TabsContents>
+					</Tabs>
+				</TabsContent>
 
-			<TabsContent value="balance" className="mt-6">
-				<Tabs defaultValue={results[0]?.fiscal_year || "2024"} className="w-full">
-					<TabsList className="grid w-full grid-cols-3">
-						{results.map((period, idx) => (
-							<TabsTrigger key={idx} value={period.fiscal_year || `year-${idx}`}>
-								{period.fiscal_year || ""} {period.fiscal_period || ""}
-							</TabsTrigger>
-						))}
-					</TabsList>
-					{results.map((period, idx) => (
-						<TabsContent key={idx} value={period.fiscal_year || `year-${idx}`} className="mt-4">
-							<div className="text-xs text-muted-foreground mb-4">
-								{period.timeframe ? `${period.timeframe.toUpperCase()}` : ""}
-								{period.end_date ? ` • End ${new Date(period.end_date).toLocaleDateString()}` : ""}
-								{period.filing_date ? ` • Filed ${new Date(period.filing_date).toLocaleDateString()}` : ""}
-							</div>
-							{renderBalanceSheet(period.financials?.balance_sheet)}
-						</TabsContent>
-					))}
-				</Tabs>
-			</TabsContent>
+				<TabsContent value="balance">
+					<Tabs defaultValue={results[0]?.fiscal_year || "2024"} className="w-full">
+						<TabsList className="grid w-full grid-cols-3">
+							{results.map((period, idx) => (
+								<TabsTrigger key={idx} value={period.fiscal_year || `year-${idx}`}>
+									{period.fiscal_year || ""} {period.fiscal_period || ""}
+								</TabsTrigger>
+							))}
+						</TabsList>
+						<TabsContents className="mt-4">
+							{results.map((period, idx) => (
+								<TabsContent key={idx} value={period.fiscal_year || `year-${idx}`}>
+									<div className="text-xs text-muted-foreground mb-4">
+										{period.timeframe ? `${period.timeframe.toUpperCase()}` : ""}
+										{period.end_date ? ` • End ${new Date(period.end_date).toLocaleDateString()}` : ""}
+										{period.filing_date ? ` • Filed ${new Date(period.filing_date).toLocaleDateString()}` : ""}
+									</div>
+									{renderBalanceSheet(period.financials?.balance_sheet)}
+								</TabsContent>
+							))}
+						</TabsContents>
+					</Tabs>
+				</TabsContent>
 
-			<TabsContent value="cash" className="mt-6">
-				<Tabs defaultValue={results[0]?.fiscal_year || "2024"} className="w-full">
-					<TabsList className="grid w-full grid-cols-3">
-						{results.map((period, idx) => (
-							<TabsTrigger key={idx} value={period.fiscal_year || `year-${idx}`}>
-								{period.fiscal_year || ""} {period.fiscal_period || ""}
-							</TabsTrigger>
-						))}
-					</TabsList>
-					{results.map((period, idx) => (
-						<TabsContent key={idx} value={period.fiscal_year || `year-${idx}`} className="mt-4">
-							<div className="text-xs text-muted-foreground mb-4">
-								{period.timeframe ? `${period.timeframe.toUpperCase()}` : ""}
-								{period.end_date ? ` • End ${new Date(period.end_date).toLocaleDateString()}` : ""}
-								{period.filing_date ? ` • Filed ${new Date(period.filing_date).toLocaleDateString()}` : ""}
-							</div>
-							{renderCashFlowStatement(period.financials?.cash_flow_statement)}
-						</TabsContent>
-					))}
-				</Tabs>
-			</TabsContent>
+				<TabsContent value="cash">
+					<Tabs defaultValue={results[0]?.fiscal_year || "2024"} className="w-full">
+						<TabsList className="grid w-full grid-cols-3">
+							{results.map((period, idx) => (
+								<TabsTrigger key={idx} value={period.fiscal_year || `year-${idx}`}>
+									{period.fiscal_year || ""} {period.fiscal_period || ""}
+								</TabsTrigger>
+							))}
+						</TabsList>
+						<TabsContents className="mt-4">
+							{results.map((period, idx) => (
+								<TabsContent key={idx} value={period.fiscal_year || `year-${idx}`}>
+									<div className="text-xs text-muted-foreground mb-4">
+										{period.timeframe ? `${period.timeframe.toUpperCase()}` : ""}
+										{period.end_date ? ` • End ${new Date(period.end_date).toLocaleDateString()}` : ""}
+										{period.filing_date ? ` • Filed ${new Date(period.filing_date).toLocaleDateString()}` : ""}
+									</div>
+									{renderCashFlowStatement(period.financials?.cash_flow_statement)}
+								</TabsContent>
+							))}
+						</TabsContents>
+					</Tabs>
+				</TabsContent>
 
-			<TabsContent value="comp" className="mt-6">
-				<Tabs defaultValue={results[0]?.fiscal_year || "2024"} className="w-full">
-					<TabsList className="grid w-full grid-cols-3">
-						{results.map((period, idx) => (
-							<TabsTrigger key={idx} value={period.fiscal_year || `year-${idx}`}>
-								{period.fiscal_year || ""} {period.fiscal_period || ""}
-							</TabsTrigger>
-						))}
-					</TabsList>
-					{results.map((period, idx) => (
-						<TabsContent key={idx} value={period.fiscal_year || `year-${idx}`} className="mt-4">
-							<div className="text-xs text-muted-foreground mb-4">
-								{period.timeframe ? `${period.timeframe.toUpperCase()}` : ""}
-								{period.end_date ? ` • End ${new Date(period.end_date).toLocaleDateString()}` : ""}
-								{period.filing_date ? ` • Filed ${new Date(period.filing_date).toLocaleDateString()}` : ""}
-							</div>
-							{renderComprehensiveIncomeStatement(period.financials?.comprehensive_income)}
-						</TabsContent>
-					))}
-				</Tabs>
-			</TabsContent>
+				<TabsContent value="comp">
+					<Tabs defaultValue={results[0]?.fiscal_year || "2024"} className="w-full">
+						<TabsList className="grid w-full grid-cols-3">
+							{results.map((period, idx) => (
+								<TabsTrigger key={idx} value={period.fiscal_year || `year-${idx}`}>
+									{period.fiscal_year || ""} {period.fiscal_period || ""}
+								</TabsTrigger>
+							))}
+						</TabsList>
+						<TabsContents className="mt-4">
+							{results.map((period, idx) => (
+								<TabsContent key={idx} value={period.fiscal_year || `year-${idx}`}>
+									<div className="text-xs text-muted-foreground mb-4">
+										{period.timeframe ? `${period.timeframe.toUpperCase()}` : ""}
+										{period.end_date ? ` • End ${new Date(period.end_date).toLocaleDateString()}` : ""}
+										{period.filing_date ? ` • Filed ${new Date(period.filing_date).toLocaleDateString()}` : ""}
+									</div>
+									{renderComprehensiveIncomeStatement(period.financials?.comprehensive_income)}
+								</TabsContent>
+							))}
+						</TabsContents>
+					</Tabs>
+				</TabsContent>
+			</TabsContents>
 		</Tabs>
 	);
 }
