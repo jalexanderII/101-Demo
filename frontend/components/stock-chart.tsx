@@ -34,7 +34,10 @@ interface StockChartProps {
     ticker: string;
 }
 
+
 // Period type now imported from store
+type Period = "7d" | "3mo" | "6mo" | "1y";
+
 
 const PERIOD_LABELS: Record<Period, string> = {
     "7d": "7 Days",
@@ -136,7 +139,6 @@ export function StockChart({ ticker }: StockChartProps) {
 
     // Dynamic line color
     const lineColor = isFlatTrend ? "var(--color-price)" : isPositiveTrend ? "#16a34a" : "#dc2626";
-
     return (
         <Card>
             <CardHeader>
