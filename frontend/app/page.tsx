@@ -41,6 +41,23 @@ export default function Home() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
+	function handleHomeNavigation() {
+		// Clear all state
+		setLoading(false);
+		setSnapshotLoading(false);
+		setFinancialsLoading(false);
+		setError(null);
+		setData(null);
+		setSnapshotData(null);
+		setFinancialsData(null);
+		setCurrentTicker("");
+		setCurrentDate(undefined);
+		setActiveTab("Overview");
+
+		// Navigate to home without query parameters
+		router.replace("/");
+	}
+
 	async function fetchTickerData(ticker: string, date?: string) {
 		setLoading(true);
 		setSnapshotLoading(true);
@@ -99,7 +116,12 @@ export default function Home() {
 				<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
 					<div>
 						<h1 className="text-3xl font-bold tracking-tight">
-							Finance Dashboard
+							<button
+								onClick={handleHomeNavigation}
+								className="hover:text-primary transition-colors cursor-pointer"
+							>
+								Finance Dashboard
+							</button>
 						</h1>
 						<p className="text-muted-foreground">Real-time stock data powered by Polygon.io</p>
 					</div>

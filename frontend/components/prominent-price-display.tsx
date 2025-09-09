@@ -51,6 +51,7 @@ export function ProminentPriceDisplay() {
 
     // Match chart logic for trend determination
     const isPositiveTrend = priceSummary.price_change > 0;
+    const isNegativeTrend = priceSummary.price_change < 0;
     const isFlatTrend = Math.abs(priceSummary.percent_change) < 0.5; // Less than 0.5% change considered flat
 
     // Dynamic icon based on trend (same as chart)
@@ -79,8 +80,8 @@ export function ProminentPriceDisplay() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.5 }}
-                    className={`flex items-center justify-center gap-2 text-xl font-semibold mt-2 ${isFlatTrend ? 'text-neutral' :
-                        isPositiveTrend ? 'text-gain' : 'text-loss'
+                    className={`flex items-center justify-center gap-2 text-xl font-semibold mt-2 ${isFlatTrend ? 'text-muted-foreground' :
+                        isPositiveTrend ? 'text-green-600' : 'text-red-600'
                         }`}
                 >
                     <motion.div

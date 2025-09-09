@@ -145,7 +145,7 @@ async def get_ticker_snapshot(ticker: str):
         minute bar, day bar, and previous day data
     """
     # Use a different cache key pattern for snapshots
-    cache_key = f"snapshot_{ticker}"
+    cache_key = f"snapshot_{ticker.upper()}"
     cached_data = get_cached(cache_key)
     if cached_data is not None:
         response = JSONResponse(content=cached_data)
@@ -207,7 +207,7 @@ async def get_ticker_financials(
 
     Uses the experimental /vX/reference/financials endpoint.
     """
-    cache_key = f"financials_{ticker}_{timeframe}_{limit}_{include_sources}_{sort}_{order}_{filing_date}_{period_of_report_date}"
+    cache_key = f"financials_{ticker.upper()}_{timeframe}_{limit}_{include_sources}_{sort}_{order}_{filing_date}_{period_of_report_date}"
 
     cached_data = get_cached(cache_key)
     if cached_data is not None:
