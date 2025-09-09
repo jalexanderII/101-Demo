@@ -14,6 +14,7 @@ interface Statement {
 	[key: string]: FinancialPoint;
 }
 
+
 interface FinancialsResult {
 	start_date?: string;
 	end_date?: string;
@@ -364,54 +365,6 @@ export function Financials({ results }: { results: FinancialsResult[] }) {
 		);
 	}
 
-	function renderStatement(title: string, statement?: Statement) {
-		if (!statement) return null;
-		const entries = Object.entries(statement);
-		if (entries.length === 0) return null;
-
-		return (
-			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle className="text-sm font-medium">{title}</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div className="grid gap-2 sm:grid-cols-2">
-						{entries.map(([key, point]) => {
-							const label = point.label || key.replace(/_/g, " ");
-							const value = formatFinancialValue(point.value, point.unit);
-
-							// Show unit as a subtle indicator when it's not already included in the formatted value
-							let unitIndicator = "";
-							if (point.unit && !value.includes(point.unit) && value !== "N/A") {
-								if (point.unit === "USD") {
-									unitIndicator = " USD";
-								} else if (point.unit === "shares") {
-									unitIndicator = " shares";
-								} else if (point.unit.includes("/")) {
-									// Don't show ratio units as they're complex
-									unitIndicator = "";
-								} else {
-									unitIndicator = ` ${point.unit}`;
-								}
-							}
-
-							return (
-								<div key={key} className="flex items-start justify-between gap-4 border-b py-1 last:border-b-0">
-									<span className="text-xs text-muted-foreground leading-5">{label}</span>
-									<div className="text-right">
-										<span className="text-sm font-medium whitespace-nowrap">{value}</span>
-										{unitIndicator && (
-											<span className="text-xs text-muted-foreground ml-1">{unitIndicator}</span>
-										)}
-									</div>
-								</div>
-							);
-						})}
-					</div>
-				</CardContent>
-			</Card>
-		);
-	}
 
 	function renderIncomeStatement(statement?: Statement) {
 		if (!statement) return null;
