@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from .cache import get_cached, set_cached
-from .config import ALLOWED_ORIGINS, CACHE_TTL_SECONDS
+from .config import ALLOWED_ORIGINS, CACHE_TTL_SECONDS, USER_DB, User
 from .polygon import polygon_client
 
 # Create FastAPI app
@@ -106,27 +106,29 @@ async def get_ticker_overview(
 async def proxy_logo(url: str):
     """
     Proxy logo images from Polygon API that require authentication.
-    
+
     Args:
         url: The Polygon logo URL to proxy
-        
+
     Returns:
         The image content with appropriate headers
     """
     if not url.startswith("https://api.polygon.io/v1/reference/company-branding/"):
         raise HTTPException(status_code=400, detail="Invalid logo URL")
-    
+
     try:
         # Use the polygon client's http client with auth headers
         response = await polygon_client.client.get(url)
         response.raise_for_status()
-        
+
         # Return the image with appropriate content type
         content_type = response.headers.get("content-type", "image/png")
         return Response(content=response.content, media_type=content_type)
-        
+
     except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=e.response.status_code, detail="Failed to fetch logo")
+        raise HTTPException(
+            status_code=e.response.status_code, detail="Failed to fetch logo"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -199,7 +201,9 @@ async def get_ticker_financials(
     sort: Optional[str] = Query(None, description="Sort field for ordering"),
     order: Optional[str] = Query(None, description="asc | desc", regex=r"^(asc|desc)$"),
     filing_date: Optional[str] = Query(None, description="Filter by filing_date"),
-    period_of_report_date: Optional[str] = Query(None, description="Filter by period_of_report_date"),
+    period_of_report_date: Optional[str] = Query(
+        None, description="Filter by period_of_report_date"
+    ),
 ):
     """
     Get financial statements for a ticker from Polygon.io with caching.
@@ -248,3 +252,11 @@ async def get_ticker_financials(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail={"error": str(e)})
+
+
+@app.get("/api/user/{email}")
+async def get_user_by_email(email: str) -> User:
+    """
+    Get user by email from the user database.
+    """
+    return USER_DB.get(email)

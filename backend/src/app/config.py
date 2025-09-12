@@ -1,8 +1,9 @@
 """Configuration settings for the Finance Dashboard API."""
 
 import os
-from typing import List
+from typing import Dict, List
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -23,3 +24,23 @@ ALLOWED_ORIGINS: List[str] = os.getenv(
 # Polygon API settings
 POLYGON_BASE_URL = "https://api.polygon.io"
 POLYGON_TIMEOUT = 10.0
+
+
+class User(BaseModel):
+    name: str
+    email: str
+    role: str
+
+
+USER_DB: Dict[str, User] = {
+    "admin": User(
+        name="Admin",
+        email="admin@gmail.com",
+        role="admin",
+    ),
+    "joel": User(
+        name="Joel",
+        email="joel@gmail.com",
+        role="user",
+    ),
+}
