@@ -11,20 +11,12 @@ from .cache import get_cached, set_cached
 from .config import ALLOWED_ORIGINS, CACHE_TTL_SECONDS, USER_DB, User
 from .polygon import polygon_client
 
+
 # Create FastAPI app
 app = FastAPI(
     title="Finance Dashboard API",
     description="Backend API for fetching and caching stock ticker data from Polygon.io",
     version="1.0.0",
-)
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 
@@ -38,6 +30,16 @@ async def startup_event():
 async def shutdown_event():
     """Clean up clients on shutdown."""
     await polygon_client.stop()
+
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")
