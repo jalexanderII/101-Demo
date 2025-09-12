@@ -1,0 +1,165 @@
+---
+description: Good System Design — Practical Guidance
+globs:
+alwaysApply: true
+---
+
+# Good System Design — Practical Guidance
+
+## Purpose
+
+Focus on reliable, “boring” architectures that scale through simplicity, correct state management, and pragmatic use of well-understood components (DBs, caches, queues, event hubs). Complexity should emerge only where it’s earned—never as a starting point.
+
+---
+
+## Core principles
+
+1. **Boring beats impressive.**
+   Good design is underwhelming in the best way: few surprises, few incidents, and a feeling of “this part just works.” Avoid starting with consensus frameworks, CQRS, or a patchwork of event flows unless the problem truly demands it. Complex systems that work are nearly always evolved from simple systems that worked.
+
+2. **Minimize stateful components; centralize ownership of state.**
+   Stateful pieces are the sharp edges of reliability. Prefer a single service that “owns” writes to a dataset; other services call it (or emit events) rather than writing directly. Keep other services stateless where possible.
+
+3. **Database first thinking.**
+
+   * **Schema:** Design human-readable tables; avoid “one big JSON” or key-value anti-schemas that push complexity into application code. Balance flexibility with maintainability.
+   * **Indexes:** Add them to match dominant query patterns; don’t index everything (write overhead).
+   * **Query efficiency:** Let the DB do the work—`JOIN` instead of N+1 loops, but be willing to tactically split pathological queries. Use read replicas; keep hot reads off the primary if you can tolerate replica lag.
+   * **Load shape:** Anticipate and throttle spikes (bulk imports, big transactions) to prevent feedback loops that slow the DB further.
+
+4. **Separate fast paths from slow work.**
+   Keep interactive latencies to “a few hundred ms.” Defer heavy work via background jobs (queues + workers). For long-delay tasks, store scheduled work in a DB table and sweep on a schedule (don’t lean on a volatile Redis queue for “run in a month”).
+
+5. **Cache sparingly and purposefully.**
+   Cache only after you’ve optimized the underlying operation (e.g., added the missing index). Use in-memory or a shared K/V store for short-lived results; for large/expensive artifacts (e.g., weekly reports), persist timestamped blobs in object storage and serve directly. Remember: caches add state and can go wrong.
+
+6. **Events are a tool, not a default.**
+   Prefer direct requests when you care about the response and want simpler debugging. Use events (e.g., Kafka) when producers don’t care about consumers or when high-volume, not-urgent fan-out is needed (e.g., “account\_created” → email, abuse scan, infra setup).
+
+7. **Push vs. pull is about fan-out & freshness.**
+   Pull is simpler and scales with caches in front; push is great when a small set of clients must stay fresh. At massive scale, either model requires additional infra (event processors for push; many cache/read replicas for pull).
+
+8. **Design around hot paths.**
+   Identify the parts that process the most traffic or carry the highest blast radius (e.g., metered billing ingestion; authorization checks). Optimize and harden those first; the settings page can wait.
+
+9. **Operational observability over aesthetics.**
+   Log aggressively on unhappy paths and decision points (especially billing and policy logic). Track CPU/mem, queue sizes, per-request/job timings; watch **p95/p99** in addition to averages—outliers often hit your largest customers.
+
+10. **Plan for failure: killswitches, retries, idempotency.**
+    Add feature killswitches; wrap high-volume calls in circuit breakers; use idempotency keys for writes so ambiguous retries don’t double-bill. Decide up front which components **fail open** (e.g., rate limits) vs. **fail closed** (e.g., auth).
+
+---
+
+## Reference architectures & patterns
+
+### A. “Stateful core, stateless edges”
+
+* **Write path:** Clients → stateless API → **state owner service** → DB (single writer).
+* **Read path:** Clients → stateless API → read replicas; join in DB, not in code.
+* **Asynchrony:** API enqueues background jobs for slow work; workers process from queues.
+* **Long delays / large artifacts:** DB-scheduled tasks; results cached in object storage.
+
+### B. Event hub for decoupled fan-out
+
+* Producer emits “happened” facts (not commands).
+* Consumers do side-effects (email, risk checks, projections).
+* Keep critical request/response flows synchronous; reserve events for non-critical or high-volume, eventual processing.
+
+### C. Push vs. pull delivery
+
+* **Few consumers, infrequent changes → push** from the source.
+* **Many consumers, frequent reads → pull** via caches/read replicas in front of the main app.
+* At >\~million clients, expect dedicated infra either way.
+
+---
+
+## Design checklists
+
+### System framing
+
+* What are the **hot paths**? What’s the failure blast radius for each?
+* Which service **owns each dataset**? Are any tables written by multiple services? (Fix that.)
+* For slow work, what’s synchronous vs. background? Are long-delay jobs DB-scheduled?
+
+### Database
+
+* Dominant queries identified? Matching composite indexes in place? Any N+1 risks?
+* Replica strategy defined? Which reads must hit primary (freshness)?
+* Bulk/transaction spike controls (throttles, batching) in place?
+
+### Caching
+
+* Have we optimized first (indexes, query shape) before caching?
+* Cache type fits data (in-proc vs. Redis/Memcached vs. object storage)?
+* Invalidation/TTL and fallback behavior defined?
+
+### Events & inter-service calls
+
+* For each integration: do we **need** events, or would a direct call be simpler to reason about?
+* If events are used, are topics, schemas, and consumer SLAs documented?
+
+### Reliability & ops
+
+* Killswitches for high-risk features; circuit breakers on high-volume calls.
+* **Idempotency keys** for all write APIs that can be retried.
+* Logging of negative decisions (422, billing “why not”).
+* Dashboards include **p95/p99**, queue depths, and worker lag.
+
+---
+
+## Decision guides
+
+**When to cache?**
+Only after: (1) the DB query is indexed/optimized, (2) you’ve measured remaining latency/cost, and (3) you’ve defined invalidation and stale-data tolerance. For very large artifacts, prefer object-storage “persistent cache.”
+
+**When to use events?**
+Use events when the producer doesn’t need the consumer’s response and the work is high-volume or loosely coupled. Otherwise, prefer synchronous calls for debuggability and observability.
+
+**Push or pull?**
+
+* Few consumers + infrequent changes → push.
+* Many consumers + frequent reads → pull with caches/replicas.
+  At very large scale, both require additional fan-out infra.
+
+**Fail open or closed?**
+
+* **Rate limits**: usually fail open to protect UX during outages.
+* **Auth**: always fail closed to protect data. Decide per-feature and document it.
+
+---
+
+## Anti-patterns to watch for
+
+* Starting with distributed consensus/CQRS/event soups without a proven need.
+* Multiple services writing the same table; unclear state ownership.
+* Caching to paper over missing indexes / bad query plans.
+* N+1 queries hidden by an ORM; heavy sequential DB chatter on hot paths.
+* Only tracking averages; ignoring p95/p99 and long-tail user pain.
+
+---
+
+## Operational runbook (starter)
+
+* **Background jobs**
+
+  * Queue: Redis (or equivalent) + worker fleet; retries with exponential backoff + idempotency.
+  * Long-delay tasks: DB table (`job_type`, params, `scheduled_at`, status), daily sweeper.
+* **DB protection**
+
+  * Read replicas; primary reserved for writes/critical reads.
+  * Bulk import endpoints gated by rate limiting/throttles; batch writes.
+* **Killswitches & circuit breakers**
+
+  * Feature flags to disable risky paths.
+  * Circuit breakers around external/internal high-QPS calls; health metrics drive trip/reset.
+  * Idempotency keys on all write APIs; test ambiguous-retry scenarios.
+* **Observability**
+
+  * Structured logs for error/decision branches.
+  * Dashboards: CPU/mem, queue depth & lag, request/job latency (**p95/p99**). Alert on tail latencies.
+
+---
+
+## Closing note
+
+At most companies, good system design “looks like nothing”: apply well-tested building blocks in the right places, evolve from simple to complex only as necessary, and spend your energy on state, hot paths, and failure modes.

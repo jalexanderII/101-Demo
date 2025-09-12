@@ -8,24 +8,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from .cache import get_cached, set_cached
-from .config import ALLOWED_ORIGINS, CACHE_TTL_SECONDS
+from .config import ALLOWED_ORIGINS, CACHE_TTL_SECONDS, USER_DB, User
 from .polygon import polygon_client
 from .yfinance_client import yfinance_client
+
 
 # Create FastAPI app
 app = FastAPI(
     title="Finance Dashboard API",
     description="Backend API for fetching and caching stock ticker data from Polygon.io",
     version="1.0.0",
-)
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 
@@ -39,6 +31,16 @@ async def startup_event():
 async def shutdown_event():
     """Clean up clients on shutdown."""
     await polygon_client.stop()
+
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")
@@ -107,27 +109,29 @@ async def get_ticker_overview(
 async def proxy_logo(url: str):
     """
     Proxy logo images from Polygon API that require authentication.
-    
+
     Args:
         url: The Polygon logo URL to proxy
-        
+
     Returns:
         The image content with appropriate headers
     """
     if not url.startswith("https://api.polygon.io/v1/reference/company-branding/"):
         raise HTTPException(status_code=400, detail="Invalid logo URL")
-    
+
     try:
         # Use the polygon client's http client with auth headers
         response = await polygon_client.client.get(url)
         response.raise_for_status()
-        
+
         # Return the image with appropriate content type
         content_type = response.headers.get("content-type", "image/png")
         return Response(content=response.content, media_type=content_type)
-        
+
     except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=e.response.status_code, detail="Failed to fetch logo")
+        raise HTTPException(
+            status_code=e.response.status_code, detail="Failed to fetch logo"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -200,7 +204,9 @@ async def get_ticker_financials(
     sort: Optional[str] = Query(None, description="Sort field for ordering"),
     order: Optional[str] = Query(None, description="asc | desc", regex=r"^(asc|desc)$"),
     filing_date: Optional[str] = Query(None, description="Filter by filing_date"),
-    period_of_report_date: Optional[str] = Query(None, description="Filter by period_of_report_date"),
+    period_of_report_date: Optional[str] = Query(
+        None, description="Filter by period_of_report_date"
+    ),
 ):
     """
     Get financial statements for a ticker from Polygon.io with caching.
@@ -273,7 +279,7 @@ async def get_ticker_price_summary(
     """
     # Create cache key for price summary
     cache_key = f"price_summary_{ticker.upper()}_{period}"
-    
+
     # Check cache first (shorter TTL for price data)
     cached_data = get_cached(cache_key)
     if cached_data is not None:
@@ -286,19 +292,19 @@ async def get_ticker_price_summary(
     try:
         # Get historical data to calculate change from start of period
         historical_data = yfinance_client.get_historical_data(ticker, period)
-        
+
         if not historical_data["data"]:
             raise HTTPException(status_code=404, detail="No price data available")
-        
+
         # Get first and last prices from the period
         price_data = historical_data["data"]
         start_price = price_data[0]["close"]
         current_price = price_data[-1]["close"]
-        
+
         # Calculate change and percentage
         price_change = current_price - start_price
         percent_change = (price_change / start_price) * 100 if start_price != 0 else 0
-        
+
         result = {
             "ticker": ticker.upper(),
             "period": period,
@@ -306,7 +312,7 @@ async def get_ticker_price_summary(
             "start_price": start_price,
             "price_change": price_change,
             "percent_change": percent_change,
-            "data_points": len(price_data)
+            "data_points": len(price_data),
         }
 
         # Cache the response
@@ -322,6 +328,7 @@ async def get_ticker_price_summary(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail={"error": str(e)})
+
 
 @app.get("/api/ticker/{ticker}/history")
 async def get_ticker_history(
@@ -344,7 +351,7 @@ async def get_ticker_history(
     """
     # Create cache key for historical data
     cache_key = f"history_{ticker.upper()}_{period}"
-    
+
     # Check cache first
     cached_data = get_cached(cache_key)
     if cached_data is not None:
@@ -376,3 +383,11 @@ async def get_ticker_history(
     except Exception as e:
         # Handle unexpected errors
         raise HTTPException(status_code=500, detail={"error": str(e)})
+
+
+@app.get("/api/user/{email}")
+async def get_user_by_email(email: str) -> User:
+    """
+    Get user by email from the user database.
+    """
+    return USER_DB.get(email)
