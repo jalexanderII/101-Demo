@@ -24,7 +24,10 @@ export function Tab({
       onClick={() => setSelected(text)}
       className={cn(
         "relative w-full px-4 py-2 text-sm font-semibold capitalize",
-        "text-foreground transition-colors",
+        "transition-all duration-200",
+        selected
+          ? "text-primary"
+          : "text-muted-foreground hover:text-foreground",
         discount && "flex items-center justify-center gap-2.5"
       )}
     >
@@ -33,7 +36,7 @@ export function Tab({
         <motion.span
           layoutId="tab"
           transition={{ type: "spring", duration: 0.4 }}
-          className="absolute inset-0 z-0 rounded-full bg-background shadow-sm"
+          className="absolute inset-0 z-0 rounded-full bg-primary/5 border border-primary/20 shadow-sm"
         />
       )}
       {discount && (

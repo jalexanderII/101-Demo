@@ -51,6 +51,7 @@ export function ProminentPriceDisplay() {
 
     // Match chart logic for trend determination
     const isPositiveTrend = priceSummary.price_change > 0;
+    const isNegativeTrend = priceSummary.price_change < 0;
     const isFlatTrend = Math.abs(priceSummary.percent_change) < 0.5; // Less than 0.5% change considered flat
 
     // Dynamic icon based on trend (same as chart)

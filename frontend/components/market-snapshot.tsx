@@ -53,7 +53,7 @@ export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps)
 	const snapshot = data.ticker;
 	const isPositive = snapshot.todaysChange >= 0;
 	const TrendIcon = isPositive ? TrendingUp : TrendingDown;
-	const changeColor = isPositive ? "text-green-600" : "text-red-600";
+	const changeColor = isPositive ? "text-gain" : "text-loss";
 
 	// Price data now handled by dedicated endpoint and global store
 
@@ -69,9 +69,9 @@ export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps)
 			<CardContent className="p-4">
 				<div className="flex items-start justify-between gap-2 mb-3">
 					<div className="flex items-center gap-3">
-						<Badge variant="outline" className="text-xs">{ticker}</Badge>
+						<Badge variant="default" className="text-xs font-semibold bg-primary hover:bg-primary/80">{ticker}</Badge>
 						<span className="text-xs text-muted-foreground flex items-center gap-1">
-							<Clock className="h-3 w-3" /> Last update {formatTime(snapshot.lastTrade?.t || snapshot.updated)}
+							<Clock className="h-3 w-3 text-section-accent" /> Last update {formatTime(snapshot.lastTrade?.t || snapshot.updated)}
 						</span>
 						{/* Removed ticker display - simplified for cleaner layout */}
 					</div>
@@ -80,12 +80,12 @@ export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps)
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<button
-										className="inline-flex h-8 items-center gap-1 rounded-md border bg-background px-2 text-sm hover:bg-muted"
+										className="inline-flex h-8 items-center gap-1 rounded-md border bg-primary/5 hover:bg-primary/10 border-primary/20 text-sm text-primary hover:text-primary font-medium transition-colors"
 										onClick={handleRefresh}
 										aria-label="Refresh snapshot"
 										disabled={loading}
 									>
-										<RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+										<RefreshCcw className={`h-4 w-4 text-primary ${loading ? 'animate-spin' : ''}`} />
 										<span>Refresh</span>
 									</button>
 								</TooltipTrigger>
@@ -99,6 +99,7 @@ export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps)
 					<StaggerItem>
 						<Stat
 							label="Last Price"
+							iconColor="text-section-accent"
 							value={
 								<AnimatedCounter
 									value={snapshot.lastTrade?.p || snapshot.day?.c || 0}
@@ -134,6 +135,7 @@ export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps)
 						<StaggerItem>
 							<Stat
 								label="Volume"
+								iconColor="text-section-accent"
 								value={
 									<AnimatedCounter
 										value={snapshot.day.v}

@@ -69,11 +69,27 @@ interface TickerData {
 
 interface TickerOverviewProps { data: TickerData }
 
-function InfoItem({ icon: Icon, label, value, className = "" }: { icon: React.ElementType; label: string; value: string | React.ReactNode; className?: string; }) {
+// Helper function to get icon color based on context
+function getIconColor(iconType: string, industry?: string): string {
+	switch (iconType) {
+		case "market":
+		case "volume":
+		case "location":
+		case "contact":
+		case "identifier":
+		case "industry":
+			return "text-section-accent";
+		default:
+			return "text-muted-foreground";
+	}
+}
+
+function InfoItem({ icon: Icon, label, value, className = "", iconType = "default", industry }: { icon: React.ElementType; label: string; value: string | React.ReactNode; className?: string; iconType?: string; industry?: string; }) {
+	const iconColorClass = getIconColor(iconType, industry);
 	return (
 		<div className={`space-y-1 ${className}`}>
 			<p className="text-xs text-muted-foreground flex items-center gap-1">
-				<Icon className="h-3 w-3" />
+				<Icon className={`h-3 w-3 ${iconColorClass}`} />
 				{label}
 			</p>
 			<p className="text-sm font-medium break-words">{value}</p>
@@ -140,7 +156,7 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 									<Badge variant={results.active ? "default" : "secondary"}>{results.active ? "Active" : "Inactive"}</Badge>
 									<Badge variant="outline">{results.type}</Badge>
 									{results.locale ? <Badge variant="outline">{results.locale.toUpperCase()}</Badge> : null}
-									{results.primary_exchange ? <Badge variant="outline">{results.primary_exchange}</Badge> : null}
+									{results.primary_exchange ? <Badge variant="secondary">{results.primary_exchange}</Badge> : null}
 								</div>
 
 								{/* Description Section - Within Card */}
@@ -185,12 +201,13 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 				<StaggerItem className="h-full">
 					<Card className="h-full flex flex-col">
 						<CardHeader className="pb-0">
-							<CardTitle className="text-sm font-medium">Market Data</CardTitle>
+							<CardTitle className="text-sm font-medium text-primary">Market Data</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-3 flex-1 flex flex-col justify-start">
 							<InfoItem
 								icon={DollarSign}
 								label="Market Cap"
+								iconType="market"
 								value={
 									<AnimatedCounter
 										value={results.market_cap ?? 0}
@@ -213,11 +230,11 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 				<StaggerItem className="h-full">
 					<Card className="h-full flex flex-col">
 						<CardHeader className="pb-0">
-							<CardTitle className="text-sm font-medium">Company Info</CardTitle>
+							<CardTitle className="text-sm font-medium text-primary">Company Info</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-3 flex-1 flex flex-col justify-start">
 							{results.sic_description && (
-								<InfoItem icon={Briefcase} label="Industry" value={results.sic_description} />
+								<InfoItem icon={Briefcase} label="Industry" value={results.sic_description} iconType="industry" industry={results.sic_description} />
 							)}
 							{results.total_employees && (
 								<InfoItem
@@ -234,10 +251,10 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 								/>
 							)}
 							{results.homepage_url && (
-								<InfoItem icon={Link} label="Website" value={<a href={results.homepage_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">{results.homepage_url.replace(/^https?:\/\//, "")}</a>} />
+								<InfoItem icon={Link} label="Website" iconType="contact" value={<a href={results.homepage_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs font-medium transition-colors">{results.homepage_url.replace(/^https?:\/\//, "")}</a>} />
 							)}
 							{results.phone_number && (
-								<InfoItem icon={Phone} label="Phone" value={results.phone_number} />
+								<InfoItem icon={Phone} label="Phone" value={results.phone_number} iconType="contact" />
 							)}
 						</CardContent>
 					</Card>
@@ -247,16 +264,16 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 				<StaggerItem className="h-full">
 					<Card className="h-full flex flex-col">
 						<CardHeader className="pb-0">
-							<CardTitle className="text-sm font-medium">Details</CardTitle>
+							<CardTitle className="text-sm font-medium text-primary">Details</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-3 flex-1 flex flex-col justify-start">
 							{results.address && (
-								<InfoItem icon={MapPin} label="Location" value={[results.address.city, results.address.state].filter(Boolean).join(", ")} />
+								<InfoItem icon={MapPin} label="Location" value={[results.address.city, results.address.state].filter(Boolean).join(", ")} iconType="location" />
 							)}
 							{results.cik && (
 								<div className="space-y-1">
 									<p className="text-xs text-muted-foreground flex items-center gap-1">
-										<Hash className="h-3 w-3" />
+										<Hash className="h-3 w-3 text-section-accent" />
 										CIK
 									</p>
 									<DecryptedText
@@ -269,7 +286,7 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 									/>
 								</div>
 							)}
-							{results.sic_code && <InfoItem icon={Hash} label="SIC Code" value={results.sic_code} />}
+							{results.sic_code && <InfoItem icon={Hash} label="SIC Code" value={results.sic_code} iconType="identifier" />}
 							{results.locale && <InfoItem icon={Globe} label="Locale" value={results.locale.toUpperCase()} />}
 						</CardContent>
 					</Card>
@@ -280,7 +297,7 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 					<StaggerItem className="md:col-span-2 lg:col-span-3 h-full">
 						<Card className="h-full flex flex-col">
 							<CardHeader className="pb-0">
-								<CardTitle className="text-sm font-medium">Share Information</CardTitle>
+								<CardTitle className="text-sm font-medium text-primary">Share Information</CardTitle>
 							</CardHeader>
 							<CardContent className="flex-1">
 								<div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
@@ -315,7 +332,7 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 									{results.composite_figi && (
 										<div className="space-y-1">
 											<p className="text-xs text-muted-foreground flex items-center gap-1">
-												<Hash className="h-3 w-3" />
+												<Hash className="h-3 w-3 text-section-accent" />
 												Composite FIGI
 											</p>
 											<DecryptedText
@@ -331,7 +348,7 @@ export function TickerOverview({ data }: TickerOverviewProps) {
 									{results.share_class_figi && (
 										<div className="space-y-1">
 											<p className="text-xs text-muted-foreground flex items-center gap-1">
-												<Hash className="h-3 w-3" />
+												<Hash className="h-3 w-3 text-section-accent" />
 												Share Class FIGI
 											</p>
 											<DecryptedText

@@ -138,7 +138,8 @@ export function StockChart({ ticker }: StockChartProps) {
     const TrendIcon = isFlatTrend ? EqualApproximately : isPositiveTrend ? TrendingUp : TrendingDown;
 
     // Dynamic line color
-    const lineColor = isFlatTrend ? "var(--color-price)" : isPositiveTrend ? "#16a34a" : "#dc2626";
+    const lineColor = isFlatTrend ? "#64748b" : isPositiveTrend ? "#047857" : "#991b1b";
+
     return (
         <Card>
             <CardHeader>
