@@ -136,61 +136,6 @@ async def proxy_logo(url: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/ticker/{ticker}/snapshot")
-async def get_ticker_snapshot(ticker: str):
-    """
-    Get real-time ticker snapshot data from Polygon.io with caching.
-
-    Args:
-        ticker: Stock ticker symbol (e.g., AAPL, MSFT)
-
-    Returns:
-        Ticker snapshot data from Polygon API including latest trade, quote,
-        minute bar, day bar, and previous day data
-    """
-    # Use a different cache key pattern for snapshots
-    cache_key = f"snapshot_{ticker.upper()}"
-    cached_data = get_cached(cache_key)
-    if cached_data is not None:
-        response = JSONResponse(content=cached_data)
-        response.headers["X-Cache"] = "HIT"
-        # Shorter cache time for real-time data (5 minutes)
-        cache_ttl = 300
-        response.headers["Cache-Control"] = f"public, max-age={cache_ttl}"
-        return response
-
-    try:
-        # Fetch from Polygon API
-        data = await polygon_client.get_ticker_snapshot(ticker)
-
-        # Cache with shorter TTL for real-time data
-        set_cached(cache_key, data)
-
-        # Return with cache headers
-        response = JSONResponse(content=data)
-        response.headers["X-Cache"] = "MISS"
-        cache_ttl = 300  # 5 minutes for real-time data
-        response.headers["Cache-Control"] = f"public, max-age={cache_ttl}"
-        return response
-
-    except httpx.HTTPStatusError as e:
-        # Handle Polygon API errors
-        error_detail = {
-            "error": "Polygon API error",
-            "status_code": e.response.status_code,
-        }
-        try:
-            error_detail["detail"] = e.response.json()
-        except:
-            error_detail["detail"] = e.response.text
-
-        raise HTTPException(status_code=e.response.status_code, detail=error_detail)
-
-    except Exception as e:
-        # Handle other errors
-        raise HTTPException(status_code=500, detail={"error": str(e)})
-
-
 @app.get("/api/ticker/{ticker}/financials")
 async def get_ticker_financials(
     ticker: str,

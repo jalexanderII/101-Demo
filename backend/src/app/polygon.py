@@ -55,29 +55,6 @@ class PolygonClient:
 
         return response.json()
 
-    async def get_ticker_snapshot(self, ticker: str) -> Dict[str, Any]:
-        """
-        Get ticker snapshot (real-time market data) from Polygon API.
-
-        Args:
-            ticker: Stock ticker symbol
-
-        Returns:
-            Polygon API response as dict
-
-        Raises:
-            httpx.HTTPStatusError: If API returns non-200 status
-        """
-        if not self.client:
-            raise RuntimeError("Client not initialized. Call start() first.")
-
-        url = f"/v2/snapshot/locale/us/markets/stocks/tickers/{ticker.upper()}"
-
-        response = await self.client.get(url)
-        response.raise_for_status()
-
-        return response.json()
-
     async def get_financials(
         self,
         ticker: str,
