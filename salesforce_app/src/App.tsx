@@ -28,9 +28,9 @@ export default function Page() {
 							<div className="px-4 lg:px-6">
 								<ChartAreaInteractive />
 							</div>
-					<div className="px-4 lg:px-6">
-						<SalesforceSection />
-					</div>
+							<div className="px-4 lg:px-6">
+								<SalesforceSection />
+							</div>
 							<DataTable data={data} />
 						</div>
 					</div>

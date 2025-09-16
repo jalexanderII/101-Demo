@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { apiFetch } from "@/lib/api";
 
@@ -14,7 +14,7 @@ export function SalesforceSection() {
 	const [status, setStatus] = useState<SalesforceStatus | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
-	const checkStatus = async () => {
+	const checkStatus = useCallback(async () => {
 		setIsLoading(true);
 		try {
 			const result = await apiFetch<SalesforceStatus>("/api/salesforce/status");
@@ -26,11 +26,11 @@ export function SalesforceSection() {
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		checkStatus();
-	}, []);
+	}, [checkStatus]);
 
 	if (isLoading) {
 		return (

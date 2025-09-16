@@ -11,9 +11,15 @@ const querySchema = z.object({
 });
 
 router.get("/status", (_req, res) => {
-	res.json({ 
+	res.json({
 		configured: isSalesforceConfigured,
-		missing: isSalesforceConfigured ? [] : ["SALESFORCE_CLIENT_ID", "SALESFORCE_CLIENT_SECRET", "SALESFORCE_REFRESH_TOKEN"].filter(key => !process.env[key])
+		missing: isSalesforceConfigured
+			? []
+			: [
+					"SALESFORCE_CLIENT_ID",
+					"SALESFORCE_CLIENT_SECRET",
+					"SALESFORCE_REFRESH_TOKEN",
+				].filter((key) => !process.env[key]),
 	});
 });
 

@@ -8,15 +8,21 @@ const router = Router();
 router.get("/salesforce/start", (req, res) => {
 	if (!env.SALESFORCE_CLIENT_ID || !env.SALESFORCE_CLIENT_SECRET) {
 		res.status(400).json({
-			error: "Missing SALESFORCE_CLIENT_ID or SALESFORCE_CLIENT_SECRET in environment",
+			error:
+				"Missing SALESFORCE_CLIENT_ID or SALESFORCE_CLIENT_SECRET in environment",
 		});
 		return;
 	}
 
-	const authUrl = new URL(`${env.SALESFORCE_LOGIN_URL}/services/oauth2/authorize`);
+	const authUrl = new URL(
+		`${env.SALESFORCE_LOGIN_URL}/services/oauth2/authorize`,
+	);
 	authUrl.searchParams.set("response_type", "code");
 	authUrl.searchParams.set("client_id", env.SALESFORCE_CLIENT_ID);
-	authUrl.searchParams.set("redirect_uri", `http://localhost:${env.SERVER_PORT}/auth/salesforce/callback`);
+	authUrl.searchParams.set(
+		"redirect_uri",
+		`http://localhost:${env.SERVER_PORT}/auth/salesforce/callback`,
+	);
 	authUrl.searchParams.set("scope", "refresh_token offline_access api");
 
 	res.redirect(authUrl.toString());
@@ -57,17 +63,20 @@ router.get("/salesforce/callback", async (req, res) => {
 
 	try {
 		// Exchange code for tokens
-		const tokenResponse = await fetch(`${env.SALESFORCE_LOGIN_URL}/services/oauth2/token`, {
-			method: "POST",
-			headers: { "Content-Type": "application/x-www-form-urlencoded" },
-			body: new URLSearchParams({
-				grant_type: "authorization_code",
-				client_id: env.SALESFORCE_CLIENT_ID!,
-				client_secret: env.SALESFORCE_CLIENT_SECRET!,
-				redirect_uri: `http://localhost:${env.SERVER_PORT}/auth/salesforce/callback`,
-				code,
-			}).toString(),
-		});
+		const tokenResponse = await fetch(
+			`${env.SALESFORCE_LOGIN_URL}/services/oauth2/token`,
+			{
+				method: "POST",
+				headers: { "Content-Type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams({
+					grant_type: "authorization_code",
+					client_id: env.SALESFORCE_CLIENT_ID!,
+					client_secret: env.SALESFORCE_CLIENT_SECRET!,
+					redirect_uri: `http://localhost:${env.SERVER_PORT}/auth/salesforce/callback`,
+					code,
+				}).toString(),
+			},
+		);
 
 		if (!tokenResponse.ok) {
 			const errorText = await tokenResponse.text();
@@ -78,7 +87,9 @@ router.get("/salesforce/callback", async (req, res) => {
 		const { refresh_token, instance_url } = tokens;
 
 		if (!refresh_token) {
-			throw new Error("No refresh token received. Make sure your Connected App has 'refresh_token' and 'offline_access' scopes.");
+			throw new Error(
+				"No refresh token received. Make sure your Connected App has 'refresh_token' and 'offline_access' scopes.",
+			);
 		}
 
 		// Display success page with refresh token
