@@ -16,7 +16,7 @@ export interface SalesforceQueryResponse<TRecord = Record<string, unknown>> {
 let cachedToken: TokenResponse | null = null;
 let tokenExpiresAt = 0;
 
-function assertConfigured(): asserts isSalesforceConfigured is true {
+function assertConfigured(): void {
 	if (!isSalesforceConfigured) {
 		throw new Error(
 			"Salesforce environment variables are not configured. Update .env with the required credentials.",

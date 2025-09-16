@@ -2,10 +2,20 @@ import { Router } from "express";
 
 import { env } from "../config";
 
+interface TokenResponse {
+	access_token: string;
+	refresh_token: string;
+	instance_url: string;
+	id: string;
+	token_type: string;
+	issued_at: string;
+	signature: string;
+}
+
 const router = Router();
 
 // Generate OAuth authorization URL and redirect user to Salesforce
-router.get("/salesforce/start", (req, res) => {
+router.get("/salesforce/start", (_req, res) => {
 	if (!env.SALESFORCE_CLIENT_ID || !env.SALESFORCE_CLIENT_SECRET) {
 		res.status(400).json({
 			error:
@@ -83,7 +93,7 @@ router.get("/salesforce/callback", async (req, res) => {
 			throw new Error(`Token exchange failed: ${errorText}`);
 		}
 
-		const tokens = await tokenResponse.json();
+		const tokens = (await tokenResponse.json()) as TokenResponse;
 		const { refresh_token, instance_url } = tokens;
 
 		if (!refresh_token) {
