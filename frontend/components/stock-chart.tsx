@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { TrendingUp, AlertCircle, RefreshCw } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, LabelList } from 'recharts';
+import { TrendingUp, TrendingDown, EqualApproximately, AlertCircle, RefreshCw } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
+import { motion, AnimatePresence } from "motion/react";
+import { AnimatedCounter, formatters } from "@/components/ui/animated-counter";
+import { useStockStore, type Period } from "@/lib/store";
 
 interface StockDataPoint {
     date: string;
@@ -31,7 +34,10 @@ interface StockChartProps {
     ticker: string;
 }
 
+
+// Period type now imported from store
 type Period = "7d" | "3mo" | "6mo" | "1y";
+
 
 const PERIOD_LABELS: Record<Period, string> = {
     "7d": "7 Days",
@@ -48,7 +54,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function StockChart({ ticker }: StockChartProps) {
-    const [selectedPeriod, setSelectedPeriod] = useState<Period>("7d");
+    const { selectedPeriod, setSelectedPeriod } = useStockStore();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [chartData, setChartData] = useState<StockChartData | null>(null);
@@ -123,49 +129,64 @@ export function StockChart({ ticker }: StockChartProps) {
         ? (priceChange / formattedData[0].price) * 100
         : 0;
 
+    // Determine trend and colors
+    const isPositiveTrend = priceChange > 0;
+    const isNegativeTrend = priceChange < 0;
+    const isFlatTrend = Math.abs(percentChange) < 0.5; // Less than 0.5% change considered flat
+
+    // Dynamic icon based on trend
+    const TrendIcon = isFlatTrend ? EqualApproximately : isPositiveTrend ? TrendingUp : TrendingDown;
+
+    // Dynamic line color
+    const lineColor = isFlatTrend ? "var(--color-price)" : isPositiveTrend ? "#16a34a" : "#dc2626";
     return (
         <Card>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5" />
+                            <TrendIcon className={`h-5 w-5 ${isFlatTrend ? 'text-muted-foreground' :
+                                isPositiveTrend ? 'text-green-600' : 'text-red-600'
+                                }`} />
                             Stock Price Chart
                         </CardTitle>
                         <CardDescription>
                             {ticker ? `Historical price data for ${ticker}` : "Select a ticker to view price chart"}
                         </CardDescription>
                     </div>
-                    {chartData && (
-                        <div className="text-right text-sm">
-                            <div className="font-medium">
-                                {formatCurrency(formattedData[formattedData.length - 1]?.price || 0)}
-                            </div>
-                            <div className={`text-xs ${priceChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {priceChange >= 0 ? '+' : ''}{formatCurrency(priceChange)} ({percentChange >= 0 ? '+' : ''}{percentChange.toFixed(2)}%)
-                            </div>
-                        </div>
-                    )}
+                    {/* Removed price display - now handled by ProminentPriceDisplay */}
                 </div>
 
                 {/* Period Selection */}
-                <div className="flex flex-wrap gap-2 pt-2">
+                <div className="flex flex-wrap gap-2 pt-2 relative">
                     {(Object.keys(PERIOD_LABELS) as Period[]).map(period => (
-                        <Badge
+                        <motion.button
                             key={period}
-                            variant={selectedPeriod === period ? "default" : "outline"}
-                            className="cursor-pointer transition-colors hover:bg-muted"
+                            className={`relative px-3 py-1.5 text-sm font-medium rounded-full transition-colors cursor-pointer ${selectedPeriod === period
+                                ? "text-primary-foreground z-10"
+                                : "text-muted-foreground hover:text-foreground"
+                                }`}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => handlePeriodChange(period)}
+                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         >
-                            {PERIOD_LABELS[period]}
-                        </Badge>
+                            {selectedPeriod === period && (
+                                <motion.div
+                                    className="absolute inset-0 bg-primary rounded-full"
+                                    layoutId="activeTab"
+                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                />
+                            )}
+                            <span className="relative z-10">{PERIOD_LABELS[period]}</span>
+                        </motion.button>
                     ))}
                 </div>
             </CardHeader>
 
             <CardContent>
-                {/* Loading State */}
-                {loading && <ChartSkeleton />}
+                {/* Loading State - with delay to prevent flash */}
+                {loading && chartData === null && <ChartSkeleton />}
 
                 {/* Error State */}
                 {error && !loading && (
@@ -230,15 +251,34 @@ export function StockChart({ ticker }: StockChartProps) {
                             <Line
                                 dataKey="price"
                                 type="natural"
-                                stroke="var(--color-price)"
+                                stroke={lineColor}
                                 strokeWidth={2}
                                 dot={{
-                                    fill: "var(--color-price)",
+                                    fill: lineColor,
+                                    strokeWidth: 2,
+                                    r: 3,
                                 }}
                                 activeDot={{
                                     r: 6,
+                                    stroke: lineColor,
+                                    strokeWidth: 2,
+                                    fill: "hsl(var(--background))"
                                 }}
-                            />
+                            >
+                                <LabelList
+                                    dataKey="price"
+                                    position="top"
+                                    offset={12}
+                                    className="fill-foreground text-xs font-bold"
+                                    formatter={(value: number, index: number) => {
+                                        // Only show labels for first and last points
+                                        if (index === 0 || index === formattedData.length - 1) {
+                                            return formatters.price(value);
+                                        }
+                                        return '';
+                                    }}
+                                />
+                            </Line>
                         </LineChart>
                     </ChartContainer>
                 )}
@@ -257,19 +297,35 @@ export function StockChart({ ticker }: StockChartProps) {
 function ChartSkeleton() {
     return (
         <div className="h-80 space-y-4">
-            {/* Chart skeleton */}
-            <div className="space-y-2">
-                {[...Array(6)].map((_, i) => (
-                    <div key={i} className="flex items-end gap-1">
-                        {[...Array(20)].map((_, j) => (
+            {/* Line chart skeleton */}
+            <div className="relative h-full">
+                {/* Chart area */}
+                <div className="h-full flex items-end justify-between px-4 pb-8">
+                    {[...Array(7)].map((_, i) => (
+                        <div key={i} className="flex flex-col items-center space-y-1">
+                            {/* Data point */}
                             <Skeleton
-                                key={j}
-                                className="w-3"
-                                style={{ height: `${Math.random() * 60 + 20}px` }}
+                                className="w-2 h-2 rounded-full"
                             />
-                        ))}
-                    </div>
-                ))}
+                            {/* Connecting line effect */}
+                            {i < 6 && (
+                                <Skeleton className="w-8 h-0.5" />
+                            )}
+                        </div>
+                    ))}
+                </div>
+                {/* X-axis skeleton */}
+                <div className="absolute bottom-0 left-0 right-0 flex justify-between px-4">
+                    {[...Array(4)].map((_, i) => (
+                        <Skeleton key={i} className="h-3 w-12" />
+                    ))}
+                </div>
+                {/* Y-axis skeleton */}
+                <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between py-4">
+                    {[...Array(5)].map((_, i) => (
+                        <Skeleton key={i} className="h-3 w-12" />
+                    ))}
+                </div>
             </div>
         </div>
     );
