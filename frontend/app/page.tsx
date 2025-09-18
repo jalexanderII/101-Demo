@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TickerForm } from "@/components/ticker-form";
 import { TickerOverview } from "@/components/ticker-overview";
-import { MarketSnapshot } from "@/components/market-snapshot";
 import { Financials } from "@/components/financials";
 import { StockChart } from "@/components/stock-chart";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -17,11 +16,9 @@ export default function Home() {
 	const params = useSearchParams();
 
 	const [loading, setLoading] = useState(false);
-	const [snapshotLoading, setSnapshotLoading] = useState(false);
 	const [financialsLoading, setFinancialsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [data, setData] = useState<any>(null);
-	const [snapshotData, setSnapshotData] = useState<any>(null);
 	const [financialsData, setFinancialsData] = useState<any>(null);
 	const [currentTicker, setCurrentTicker] = useState<string>("");
 	const [currentDate, setCurrentDate] = useState<string | undefined>(undefined);
@@ -39,11 +36,9 @@ export default function Home() {
 
 	async function fetchTickerData(ticker: string, date?: string) {
 		setLoading(true);
-		setSnapshotLoading(true);
 		setFinancialsLoading(true);
 		setError(null);
 		setData(null);
-		setSnapshotData(null);
 		setFinancialsData(null);
 		setCurrentTicker(ticker);
 		setCurrentDate(date);
@@ -54,9 +49,8 @@ export default function Home() {
 		router.replace(url.pathname + "?" + url.searchParams.toString());
 
 		try {
-			const [overviewResponse, snapshotResponse, financialsResponse] = await Promise.all([
+			const [overviewResponse, financialsResponse] = await Promise.all([
 				fetch(`/api/ticker/${ticker}${date ? `?date=${date}` : ""}`),
-				fetch(`/api/ticker/${ticker}/snapshot`),
 				fetch(`/api/ticker/${ticker}/financials?timeframe=annual&limit=3`)
 			]);
 
@@ -69,12 +63,6 @@ export default function Home() {
 			setData(overviewResult);
 			setLoading(false);
 
-			if (snapshotResponse.ok) {
-				const snapshotResult = await snapshotResponse.json();
-				setSnapshotData(snapshotResult);
-			}
-			setSnapshotLoading(false);
-
 			if (financialsResponse.ok) {
 				const financialsResult = await financialsResponse.json();
 				setFinancialsData(financialsResult);
@@ -83,7 +71,6 @@ export default function Home() {
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "An unexpected error occurred");
 			setLoading(false);
-			setSnapshotLoading(false);
 			setFinancialsLoading(false);
 		}
 	}
@@ -103,20 +90,6 @@ export default function Home() {
 					</div>
 				</div>
 
-				{/* Market Snapshot - Full Width */}
-				<div className="mb-6">
-					{snapshotLoading && <SnapshotSkeleton />}
-					{snapshotData && !snapshotLoading && (
-						<MarketSnapshot data={snapshotData} ticker={currentTicker} onRefresh={() => fetchTickerData(currentTicker, currentDate)} />
-					)}
-					{!snapshotData && !snapshotLoading && !error && !data && (
-						<div className="bg-muted/30 rounded-lg border border-dashed p-8 text-center">
-							<p className="text-muted-foreground">
-								Search for a ticker to see real-time market data
-							</p>
-						</div>
-					)}
-				</div>
 
 				{/* Error Alert */}
 				{error && (
@@ -168,21 +141,6 @@ function LoadingSkeleton() {
 					<Skeleton className="h-4 w-3/4" />
 				</div>
 			))}
-		</div>
-	);
-}
-
-function SnapshotSkeleton() {
-	return (
-		<div className="bg-card rounded-lg border p-4">
-			<div className="grid gap-4 md:grid-cols-4">
-				{[...Array(4)].map((_, i) => (
-					<div key={i}>
-						<Skeleton className="h-4 w-20 mb-2" />
-						<Skeleton className="h-8 w-full" />
-					</div>
-				))}
-			</div>
 		</div>
 	);
 }
