@@ -1,0 +1,1 @@
+# Structure in a way that maximized parallelism so multiple devs can work on different parts if possible. include a dag/dep tree at the end so i know exactly what order i can run these. Prefix the todo list so i know exactly how to distribute each task

@@ -1,6 +1,6 @@
 # Finance Dashboard
 
-A full-stack finance dashboard that provides real-time stock information using the Polygon.io API.
+A full-stack finance dashboard that provides real-time stock information using Yahoo Finance (via yfinance). No API key required.
 
 ## Features
 
@@ -10,8 +10,8 @@ A full-stack finance dashboard that provides real-time stock information using t
   - Market capitalization
   - Exchange information
   - Company contact details
-  - Financial identifiers (CIK, FIGI, etc.)
-- 📅 Optional date parameter for historical data
+  - Financial identifiers (CIK, etc.)
+- 📈 Income statement, balance sheet, and cash flow
 - ⚡ Fast response times with backend caching
 - 🎨 Modern, responsive UI with shadcn/ui components
 
@@ -19,7 +19,7 @@ A full-stack finance dashboard that provides real-time stock information using t
 
 ### Backend
 - **FastAPI** (Python) - High-performance async API framework
-- **httpx** - Async HTTP client for Polygon.io API calls
+- **yfinance** - Stock data from Yahoo Finance (no API key)
 - **cachetools** - TTL-based in-memory caching
 - **uv** - Fast Python package manager
 
@@ -31,10 +31,9 @@ A full-stack finance dashboard that provides real-time stock information using t
 
 ## Prerequisites
 
-- Python 3.8+
+- Python 3.12+
 - Node.js 18+
 - pnpm
-- Polygon.io API key
 
 ## Setup
 
@@ -45,12 +44,7 @@ A full-stack finance dashboard that provides real-time stock information using t
    cd backend
    ```
 
-2. Set your Polygon.io API key:
-   ```bash
-   export POLYGON_API_KEY=your_api_key_here
-   ```
-
-3. Run the FastAPI server:
+2. Run the FastAPI server:
    ```bash
    uv run uvicorn app.main:app --reload --port 8000
    ```
@@ -80,19 +74,20 @@ A full-stack finance dashboard that provides real-time stock information using t
 
 1. Open the application at `http://localhost:3000`
 2. Enter a stock ticker symbol (e.g., AAPL, MSFT, GOOGL)
-3. Optionally select a date for historical data
-4. Click "Get Overview" to fetch and display the stock information
+3. Click "Get Overview" to fetch and display the stock information
 
 ## API Endpoints
 
 - `GET /api/ticker/{ticker}` - Get ticker overview data
   - Optional query parameter: `date` (format: YYYY-MM-DD)
   - Returns cached data if available (6-hour TTL by default)
+- `GET /api/ticker/{ticker}/financials` - Get financial statements
+  - Query parameters: `timeframe` (annual | quarterly | ttm), `limit`
+  - Returns income statement, balance sheet, and cash flow
 
 ## Environment Variables
 
 ### Backend
-- `POLYGON_API_KEY` (required) - Your Polygon.io API key
 - `CACHE_TTL_SECONDS` (optional, default: 21600) - Cache time-to-live in seconds
 - `CACHE_MAX_SIZE` (optional, default: 1024) - Maximum number of cached items
 - `ALLOWED_ORIGINS` (optional, default: http://localhost:3000) - CORS allowed origins
@@ -103,4 +98,4 @@ The frontend is configured to automatically proxy API requests to the backend vi
 
 ## Caching
 
-The backend implements an in-memory TTL cache to reduce API calls to Polygon.io and improve response times. Cache headers are included in responses for proper browser caching as well.
+The backend implements an in-memory TTL cache to reduce API calls and improve response times. Cache headers are included in responses for proper browser caching as well.

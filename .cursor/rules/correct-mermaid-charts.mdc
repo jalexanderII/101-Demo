@@ -1,0 +1,36 @@
+---
+alwaysApply: true
+---
+
+# Mermaid Diagram Rules
+
+## Never use HTML tags in Mermaid node labels
+
+**CRITICAL**: Mermaid does NOT support HTML tags like `<br/>`, `<b>`, `<i>`, etc. in node labels or arrow labels.
+
+**WRONG**:
+```mermaid
+graph TB
+    A[Main Page<br/>page.tsx]
+    B[Component<br/>with<br/>breaks]
+```
+
+**CORRECT**:
+```mermaid
+graph TB
+    A["Main Page\npage.tsx"]
+    B["Component\nwith\nbreaks"]
+```
+
+**Rules for Mermaid diagrams:**
+1. Use `\n` (backslash-n) for line breaks in node labels, NOT `<br/>`
+2. Always quote node labels that contain special characters or line breaks: `NodeID["Label with\nline break"]`
+3. For arrow labels with special characters, quote them: `A -->|"GET /api/endpoint"| B`
+4. Avoid using HTML entities or tags anywhere in Mermaid syntax
+5. Test complex diagrams in Mermaid Live Editor before including them
+
+**Common mistakes to avoid:**
+- ❌ `Node[Label<br/>Second Line]` - HTML tags don't work
+- ❌ `Node[Label/Second Line]` - Unquoted special characters can break
+- ✅ `Node["Label\nSecond Line"]` - Use \n and quote the label
+
