@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
 	title: "Finance Dashboard",
-	description: "Real-time stock information powered by Polygon.io",
+	description: "Real-time stock information powered by Yahoo Finance",
 };
 
 export default function RootLayout({

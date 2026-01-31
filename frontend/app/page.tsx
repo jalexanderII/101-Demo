@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { AlertCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Financials } from "@/components/financials";
 import { TickerForm } from "@/components/ticker-form";
 import { TickerOverview } from "@/components/ticker-overview";
-import { Financials } from "@/components/financials";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle } from "lucide-react";
 
 export default function Home() {
 	const router = useRouter();
@@ -44,18 +44,23 @@ export default function Home() {
 
 		const url = new URL(window.location.href);
 		url.searchParams.set("ticker", ticker);
-		if (date) url.searchParams.set("date", date); else url.searchParams.delete("date");
+		if (date) url.searchParams.set("date", date);
+		else url.searchParams.delete("date");
 		router.replace(url.pathname + "?" + url.searchParams.toString());
 
 		try {
 			const [overviewResponse, financialsResponse] = await Promise.all([
 				fetch(`/api/ticker/${ticker}${date ? `?date=${date}` : ""}`),
-				fetch(`/api/ticker/${ticker}/financials?timeframe=annual&limit=3`)
+				fetch(`/api/ticker/${ticker}/financials?timeframe=annual&limit=3`),
 			]);
 
 			if (!overviewResponse.ok) {
 				const errorData = await overviewResponse.json();
-				throw new Error(errorData.detail?.message || errorData.detail || `Error: ${overviewResponse.status}`);
+				throw new Error(
+					errorData.detail?.message ||
+						errorData.detail ||
+						`Error: ${overviewResponse.status}`,
+				);
 			}
 
 			const overviewResult = await overviewResponse.json();
@@ -68,7 +73,9 @@ export default function Home() {
 			}
 			setFinancialsLoading(false);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "An unexpected error occurred");
+			setError(
+				err instanceof Error ? err.message : "An unexpected error occurred",
+			);
 			setLoading(false);
 			setFinancialsLoading(false);
 		}
@@ -80,15 +87,18 @@ export default function Home() {
 				{/* Header and Search Bar */}
 				<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
 					<div>
-						<h1 className="text-3xl font-bold tracking-tight">Finance Dashboard</h1>
-						<p className="text-muted-foreground">Real-time stock data powered by Polygon.io</p>
+						<h1 className="text-3xl font-bold tracking-tight">
+							Finance Dashboard
+						</h1>
+						<p className="text-muted-foreground">
+							Real-time stock data powered by Yahoo Finance
+						</p>
 					</div>
 					{/* Search Form - Top Right */}
 					<div className="bg-card/50 rounded-lg border p-3 sm:min-w-[280px]">
 						<TickerForm onSubmit={fetchTickerData} isLoading={loading} />
 					</div>
 				</div>
-
 
 				{/* Error Alert */}
 				{error && (
@@ -111,7 +121,9 @@ export default function Home() {
 						</TabsContent>
 						<TabsContent value="financials">
 							{financialsLoading && <FinancialsSkeleton />}
-							{financialsData && !financialsLoading && <Financials results={financialsData.results || []} />}
+							{financialsData && !financialsLoading && (
+								<Financials results={financialsData.results || []} />
+							)}
 							{!financialsData && !financialsLoading && !loading && (
 								<div className="text-center py-8 text-muted-foreground">
 									No financial data available
