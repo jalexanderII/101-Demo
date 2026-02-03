@@ -18,12 +18,14 @@ A full-stack finance dashboard that provides real-time stock information using Y
 ## Tech Stack
 
 ### Backend
+
 - **FastAPI** (Python) - High-performance async API framework
 - **yfinance** - Stock data from Yahoo Finance (no API key)
 - **cachetools** - TTL-based in-memory caching
 - **uv** - Fast Python package manager
 
 ### Frontend
+
 - **Next.js 14** (App Router) - React framework with TypeScript
 - **Tailwind CSS** - Utility-first CSS framework
 - **shadcn/ui** - Beautifully designed components
@@ -40,12 +42,9 @@ A full-stack finance dashboard that provides real-time stock information using Y
 ### Backend Setup
 
 1. Navigate to the backend directory:
+
    ```bash
    cd backend
-   ```
-
-2. Run the FastAPI server:
-   ```bash
    source .venv/bin/activate
    uv run uvicorn app.main:app --reload --port 8000
    ```
@@ -55,17 +54,10 @@ A full-stack finance dashboard that provides real-time stock information using Y
 ### Frontend Setup
 
 1. Navigate to the frontend directory:
+
    ```bash
    cd frontend
-   ```
-
-2. Install dependencies:
-   ```bash
    pnpm install
-   ```
-
-3. Run the development server:
-   ```bash
    pnpm dev
    ```
 
@@ -89,9 +81,10 @@ A full-stack finance dashboard that provides real-time stock information using Y
 ## Environment Variables
 
 ### Backend
+
 - `CACHE_TTL_SECONDS` (optional, default: 21600) - Cache time-to-live in seconds
 - `CACHE_MAX_SIZE` (optional, default: 1024) - Maximum number of cached items
-- `ALLOWED_ORIGINS` (optional, default: http://localhost:3000) - CORS allowed origins
+- `ALLOWED_ORIGINS` (optional, default: <http://localhost:3000>) - CORS allowed origins
 
 ## Development
 
