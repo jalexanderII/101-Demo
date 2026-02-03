@@ -31,13 +31,55 @@ A full-stack finance dashboard that provides real-time stock information using Y
 - **shadcn/ui** - Beautifully designed components
 - **Lucide React** - Icon library
 
-## Prerequisites
+## Quick Start with Docker (Recommended)
+
+The easiest way to get started is using Docker. This requires no local installation of Python, Node.js, or pnpm.
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows, macOS, or Linux)
+
+### Running with Docker
+
+1. **Install Docker Desktop** (if not already installed):
+   - Download from [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/)
+   - For Windows: Make sure WSL 2 is enabled (Docker Desktop will guide you through this)
+
+2. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd 101-Demo
+   ```
+
+3. Start all services:
+   ```bash
+   docker-compose up
+   ```
+
+4. Open your browser:
+   - Frontend: `http://localhost:3000`
+   - Backend API docs: `http://localhost:8000/docs`
+
+The first build may take a few minutes as it downloads dependencies and builds the images. Subsequent starts will be much faster.
+
+To stop the services, press `Ctrl+C` (or `Cmd+C` on Mac) or run:
+```bash
+docker-compose down
+```
+
+**Note for Windows users**: If you encounter any issues, make sure Docker Desktop is running and WSL 2 is properly configured. You can verify Docker is working by running `docker --version` in PowerShell or Command Prompt.
+
+## Manual Setup (Development)
+
+If you prefer to run the services locally for development:
+
+### Prerequisites
 
 - Python 3.12+
 - Node.js 18+
 - pnpm
 
-## Setup
+### Setup
 
 ### Backend Setup
 
