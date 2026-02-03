@@ -88,6 +88,7 @@ If you prefer to run the services locally for development:
    ```bash
    cd backend
    source .venv/bin/activate
+   uv sync
    uv run uvicorn app.main:app --reload --port 8000
    ```
 
