@@ -2,14 +2,11 @@
 
 import {
 	Briefcase,
-	Building2,
 	Calendar,
 	ChevronDown,
 	ChevronUp,
 	DollarSign,
-	FileText,
 	Globe,
-	Hash,
 	Link,
 	MapPin,
 	Phone,
@@ -19,14 +16,7 @@ import { useState } from "react";
 import { CopyableField } from "@/components/copyable-field";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCompactCurrencyTBM, formatNumber } from "@/lib/format";
 
 interface TickerData {

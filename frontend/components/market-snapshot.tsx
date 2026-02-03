@@ -1,12 +1,17 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Clock, Activity, BarChart3, RefreshCcw } from "lucide-react";
-import { Stat } from "@/components/stat";
-import { formatCompactCurrencyTBM, formatCurrency, formatNumber } from "@/lib/format";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Clock, RefreshCcw, TrendingDown, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import { Stat } from "@/components/stat";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { formatCurrency, formatNumber } from "@/lib/format";
 
 interface SnapshotData {
 	status: string;
@@ -18,8 +23,24 @@ interface SnapshotData {
 		day?: { o: number; h: number; l: number; c: number; v: number; vw: number };
 		lastTrade?: { p: number; s: number; t: number };
 		lastQuote?: { P: number; S: number; p: number; s: number; t: number };
-		min?: { o: number; h: number; l: number; c: number; v: number; vw: number; t: number; n: number };
-		prevDay?: { o: number; h: number; l: number; c: number; v: number; vw: number };
+		min?: {
+			o: number;
+			h: number;
+			l: number;
+			c: number;
+			v: number;
+			vw: number;
+			t: number;
+			n: number;
+		};
+		prevDay?: {
+			o: number;
+			h: number;
+			l: number;
+			c: number;
+			v: number;
+			vw: number;
+		};
 	};
 }
 
@@ -31,17 +52,27 @@ interface MarketSnapshotProps {
 
 function formatTime(timestamp?: number): string {
 	if (!timestamp) return "N/A";
-	return new Date(timestamp).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+	return new Date(timestamp).toLocaleTimeString("en-US", {
+		hour: "2-digit",
+		minute: "2-digit",
+		second: "2-digit",
+	});
 }
 
-export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps) {
+export function MarketSnapshot({
+	data,
+	ticker,
+	onRefresh,
+}: MarketSnapshotProps) {
 	const [loading, setLoading] = useState(false);
 
 	if (!data.ticker) {
 		return (
 			<Card>
 				<CardContent className="pt-6">
-					<p className="text-center text-muted-foreground">No snapshot data available</p>
+					<p className="text-center text-muted-foreground">
+						No snapshot data available
+					</p>
 				</CardContent>
 			</Card>
 		);
@@ -64,9 +95,12 @@ export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps)
 			<CardContent className="p-4">
 				<div className="flex items-start justify-between gap-2 mb-3">
 					<div className="flex items-center gap-2">
-						<Badge variant="outline" className="text-xs">{ticker}</Badge>
+						<Badge variant="outline" className="text-xs">
+							{ticker}
+						</Badge>
 						<span className="text-xs text-muted-foreground flex items-center gap-1">
-							<Clock className="h-3 w-3" /> Last update {formatTime(snapshot.lastTrade?.t || snapshot.updated)}
+							<Clock className="h-3 w-3" /> Last update{" "}
+							{formatTime(snapshot.lastTrade?.t || snapshot.updated)}
 						</span>
 					</div>
 					{onRefresh && (
@@ -79,7 +113,9 @@ export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps)
 										aria-label="Refresh snapshot"
 										disabled={loading}
 									>
-										<RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+										<RefreshCcw
+											className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+										/>
 										<span>Refresh</span>
 									</button>
 								</TooltipTrigger>
@@ -92,15 +128,24 @@ export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps)
 				<div className="grid gap-4 md:grid-cols-4">
 					<Stat
 						label="Last Price"
-						value={formatCurrency(snapshot.lastTrade?.p || snapshot.day?.c, { maximumFractionDigits: 2 })}
+						value={formatCurrency(snapshot.lastTrade?.p || snapshot.day?.c, {
+							maximumFractionDigits: 2,
+						})}
 					/>
 					<Stat
 						label="Change"
 						value={
 							<div className={`inline-flex items-center gap-1 ${changeColor}`}>
 								<TrendIcon className="h-4 w-4" />
-								<span>{formatCurrency(Math.abs(snapshot.todaysChange), { maximumFractionDigits: 2 })}</span>
-								<span className="text-sm">({isPositive ? "+" : ""}{snapshot.todaysChangePerc.toFixed(2)}%)</span>
+								<span>
+									{formatCurrency(Math.abs(snapshot.todaysChange), {
+										maximumFractionDigits: 2,
+									})}
+								</span>
+								<span className="text-sm">
+									({isPositive ? "+" : ""}
+									{snapshot.todaysChangePerc.toFixed(2)}%)
+								</span>
 							</div>
 						}
 					/>
@@ -126,8 +171,16 @@ export function MarketSnapshot({ data, ticker, onRefresh }: MarketSnapshotProps)
 										/>
 									</div>
 									<div className="mt-1 flex justify-between text-xs text-muted-foreground">
-										<span>{formatCurrency(snapshot.day.l, { maximumFractionDigits: 2 })}</span>
-										<span>{formatCurrency(snapshot.day.h, { maximumFractionDigits: 2 })}</span>
+										<span>
+											{formatCurrency(snapshot.day.l, {
+												maximumFractionDigits: 2,
+											})}
+										</span>
+										<span>
+											{formatCurrency(snapshot.day.h, {
+												maximumFractionDigits: 2,
+											})}
+										</span>
 									</div>
 								</div>
 							}
