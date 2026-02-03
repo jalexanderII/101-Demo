@@ -46,6 +46,7 @@ A full-stack finance dashboard that provides real-time stock information using Y
 
 2. Run the FastAPI server:
    ```bash
+   source .venv/bin/activate
    uv run uvicorn app.main:app --reload --port 8000
    ```
 
